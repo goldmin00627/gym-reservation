@@ -9,6 +9,6 @@
  *   (관리자 비밀번호는 Apps Script [프로젝트 설정 > 스크립트 속성]의 ADMIN_PASSWORD)
  */
 window.GYM_CONFIG = {
-  GAS_URL: '',
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbxO_YoCHFOdGqU56gNVUveGWMrD_uCrCtvs4tQYvovYjcdm8v8qxtB65YRcjQejRkm1/exec',
   SCHOOL_NAME: 'OO중학교'
 };
