@@ -1,0 +1,57 @@
+# main 브랜치에 올리면(push) 자동으로 검사 → GitHub Pages에 배포합니다.
+# 처음 한 번: 저장소 [Settings > Pages > Build and deployment > Source]를 "GitHub Actions"로 바꾸세요.
+name: 체육관 예약 배포
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # [Actions] 탭에서 직접 실행도 가능
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: 코드 검사
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 문법 검사 (Code.gs · config.js · index.html 스크립트)
+        run: |
+          cp apps-script/Code.gs /tmp/Code.js && node --check /tmp/Code.js
+          node --check public/config.js
+          node -e "const s=require('fs').readFileSync('public/index.html','utf8');const m=[...s.matchAll(/<script>([\s\S]*?)<\/script>/g)];require('fs').writeFileSync('/tmp/page.js',m[m.length-1][1]);"
+          node --check /tmp/page.js
+      - name: 비밀번호가 코드에 들어갔는지 확인
+        run: |
+          if grep -nE "ADMIN_PASSWORD[\"' ]*[:=][[:space:]]*['\"][^'\"]+['\"]" apps-script/Code.gs public/*.js public/*.html; then
+            echo "::error::관리자 비밀번호를 코드에 적으면 안 됩니다. Apps Script 스크립트 속성에 넣으세요."; exit 1; fi
+      - name: 서버 주소 확인
+        run: |
+          if grep -qE "GAS_URL:[[:space:]]*''" public/config.js; then
+            echo "::warning::config.js의 GAS_URL이 비어 있어 '데모 모드'로 배포됩니다. (이 브라우저에만 저장)"; fi
+
+  deploy:
+    name: GitHub Pages 배포
+    needs: check
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,2291 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>체육관 예약</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bg: 'rgb(var(--bg) / <alpha-value>)',
+          card: 'rgb(var(--card) / <alpha-value>)',
+          ink: 'rgb(var(--ink) / <alpha-value>)',
+          sub: 'rgb(var(--sub) / <alpha-value>)',
+          mute: 'rgb(var(--mute) / <alpha-value>)',
+          line: 'rgb(var(--line) / <alpha-value>)',
+          field: 'rgb(var(--field) / <alpha-value>)',
+          brand: 'rgb(var(--brand) / <alpha-value>)',
+          brandsoft: 'rgb(var(--brandsoft) / <alpha-value>)',
+          good: 'rgb(var(--good) / <alpha-value>)',
+          goodsoft: 'rgb(var(--goodsoft) / <alpha-value>)',
+          bad: 'rgb(var(--bad) / <alpha-value>)',
+          badsoft: 'rgb(var(--badsoft) / <alpha-value>)',
+          floor: 'rgb(var(--floor) / <alpha-value>)'
+        },
+        fontFamily: {
+          sans: ['"Pretendard Variable"', 'Pretendard', '-apple-system', 'BlinkMacSystemFont', '"Apple SD Gothic Neo"', '"Noto Sans KR"', '"Malgun Gothic"', 'sans-serif']
+        }
+      }
+    }
+  };
+</script>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: 242 244 246; --card: 255 255 255; --ink: 25 31 40; --sub: 78 89 104; --mute: 139 149 161;
+    --line: 229 232 235; --field: 242 244 246; --brand: 49 130 246; --brandsoft: 232 243 255;
+    --good: 3 178 108; --goodsoft: 230 248 239; --bad: 240 68 82; --badsoft: 255 238 238;
+    --floor: 246 238 226;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: 16 17 19; --card: 30 32 36; --ink: 236 238 241; --sub: 176 184 193; --mute: 125 133 144;
+      --line: 52 56 62; --field: 42 45 50; --brand: 74 151 255; --brandsoft: 29 44 68;
+      --good: 52 199 128; --goodsoft: 22 50 38; --bad: 255 99 112; --badsoft: 62 28 33;
+      --floor: 48 42 34;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: 16 17 19; --card: 30 32 36; --ink: 236 238 241; --sub: 176 184 193; --mute: 125 133 144;
+    --line: 52 56 62; --field: 42 45 50; --brand: 74 151 255; --brandsoft: 29 44 68;
+    --good: 52 199 128; --goodsoft: 22 50 38; --bad: 255 99 112; --badsoft: 62 28 33;
+    --floor: 48 42 34;
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); -webkit-text-size-adjust: 100%; }
+  body { background: rgb(var(--bg)); color: rgb(var(--ink)); -webkit-tap-highlight-color: transparent; word-break: keep-all; }
+  input, textarea, select { font-size: 16px; }
+  .press { transition: transform .12s ease, background-color .15s ease, opacity .15s ease, color .15s ease, box-shadow .15s ease; }
+  .press:active:not(:disabled):not([aria-disabled="true"]) { transform: scale(.97); }
+  :focus-visible { outline: 3px solid rgb(var(--brand) / .55); outline-offset: 2px; }
+  .field {
+    width: 100%; height: 56px; border-radius: 16px; padding: 0 16px; margin-top: 8px;
+    background: rgb(var(--field)); color: rgb(var(--ink)); border: 2px solid transparent;
+    font-weight: 600; transition: border-color .15s, background-color .15s;
+  }
+  textarea.field { height: auto; padding: 14px 16px; line-height: 1.6; resize: vertical; }
+  .field::placeholder { color: rgb(var(--mute)); font-weight: 500; }
+  .field:focus { outline: none; border-color: rgb(var(--brand)); background: rgb(var(--card)); }
+  .field.is-invalid { border-color: rgb(var(--bad)); }
+  .spinner { width: 36px; height: 36px; border-radius: 50%; border: 4px solid rgb(var(--brand) / .2); border-top-color: rgb(var(--brand)); animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .shake { animation: shake .35s; }
+  @keyframes shake { 20%,60% { transform: translateX(-6px); } 40%,80% { transform: translateX(6px); } }
+  .sheet-in { animation: sheetIn .22s cubic-bezier(.2,.8,.2,1); }
+  @keyframes sheetIn { from { opacity: 0; transform: translateY(16px) scale(.98); } to { opacity: 1; transform: none; } }
+  .toast-in { animation: toastIn .25s cubic-bezier(.2,.8,.2,1); }
+  @keyframes toastIn { from { opacity: 0; transform: translate(-50%, 12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+  .flash { animation: flash .35s ease-out; }
+  @keyframes flash { from { opacity: .85; } to { opacity: 0; } }
+  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: rgb(var(--good)); box-shadow: 0 0 0 4px rgb(var(--good) / .2); }
+  .mirror { transform: scaleX(-1); }
+  /* 마감된 코트: 빗금 */
+  .closed { background-image: repeating-linear-gradient(135deg, rgb(var(--line)) 0 2px, transparent 2px 9px); }
+  /* 코트 라인 */
+  .court-lines::before { content: ""; position: absolute; inset: 7px; border: 1.5px solid rgb(var(--ink) / .08); border-radius: 10px; pointer-events: none; }
+  .court-lines::after { content: ""; position: absolute; top: 7px; bottom: 7px; left: 50%; border-left: 1.5px solid rgb(var(--ink) / .08); pointer-events: none; }
+  .court-lines.is-selected::before, .court-lines.is-selected::after { border-color: rgb(255 255 255 / .25); }
+  /* 예약할 수 없는 날짜: 입력 단계 전체 흐리게 (배치도는 회색 처리가 따로 있어 제외) */
+  #reserveSteps:disabled > :not(.keep) { opacity: .4; }
+  #reserveSteps:disabled * { cursor: not-allowed; }
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+  details[open] .chev { transform: rotate(180deg); }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body class="font-sans antialiased">
+<div class="mx-auto max-w-3xl px-4 pb-16 sm:px-6">
+
+  <!-- 헤더 -->
+  <header class="flex items-center justify-between gap-3 pb-4 pt-6">
+    <div class="min-w-0">
+      <p id="schoolName" class="text-[14px] font-semibold text-brand"></p>
+      <h1 id="pageTitle" class="mt-0.5 text-[24px] font-bold tracking-tight sm:text-[28px]">체육관 예약</h1>
+    </div>
+    <div class="flex shrink-0 items-center gap-2">
+      <span id="modeBadge" class="hidden"></span>
+      <button id="btnLock" type="button" class="press grid h-11 w-11 place-items-center rounded-full bg-card text-sub shadow-sm" aria-label="관리자 페이지 열기"></button>
+    </div>
+  </header>
+
+  <!-- ================= 학생 화면 ================= -->
+  <main id="viewStudent">
+    <!-- 공지사항 -->
+    <section class="rounded-[28px] bg-brand p-5 text-white sm:p-7" aria-labelledby="noticeTitle">
+      <div class="flex items-center gap-2.5">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 10v4a1 1 0 0 0 1 1h2l5 4V5L6 9H4a1 1 0 0 0-1 1Z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <h2 id="noticeTitle" class="text-[18px] font-bold sm:text-[20px]">체육관 이용 수칙</h2>
+      </div>
+      <ul id="noticeList" class="mt-4 grid gap-2 sm:grid-cols-2"></ul>
+    </section>
+
+    <!-- 예약 -->
+    <form id="reserveForm" class="mt-3 rounded-[28px] bg-card p-5 sm:p-7" novalidate autocomplete="off" aria-labelledby="reserveTitle">
+      <p class="text-[14px] font-semibold text-sub">점심시간 예약</p>
+      <h2 id="reserveTitle" class="mt-0.5 text-[26px] font-bold tracking-tight sm:text-[30px]">불러오는 중</h2>
+      <p id="openRule" class="mt-1 text-[13px] leading-relaxed text-mute"></p>
+
+      <!-- 1. 날짜 -->
+      <h3 class="mt-7 flex items-center gap-2 text-[16px] font-bold"><span class="grid h-6 w-6 place-items-center rounded-full bg-ink text-[12px] text-card">1</span>날짜 선택</h3>
+      <div id="dateChips" class="mt-3 grid grid-cols-5 gap-1.5"></div>
+      <p id="dateNote" class="mt-2.5 hidden items-start gap-2 rounded-2xl px-4 py-3 text-[14px] font-semibold leading-relaxed"></p>
+
+      <!-- 2~6단계: 예약할 수 없는 날짜(지난 날·오늘·휴관)를 고르면 통째로 잠김 -->
+      <fieldset id="reserveSteps" class="m-0 min-w-0 border-0 p-0">
+      <!-- 2. 구분 -->
+      <h3 class="mt-7 flex items-center gap-2 text-[16px] font-bold"><span class="grid h-6 w-6 place-items-center rounded-full bg-ink text-[12px] text-card">2</span>예약 구분</h3>
+      <div role="radiogroup" aria-label="예약 구분" class="mt-3 grid grid-cols-2 gap-1 rounded-[18px] bg-field p-1">
+        <button type="button" role="radio" data-type="single" class="press h-12 rounded-[14px] text-[15px] font-bold">개인</button>
+        <button type="button" role="radio" data-type="group" class="press h-12 rounded-[14px] text-[15px] font-bold">단체 · 2~4명</button>
+      </div>
+      <p id="typeNote" class="mt-2.5 flex items-start gap-2 rounded-2xl bg-brandsoft px-4 py-3 text-[14px] font-semibold leading-relaxed text-brand"></p>
+
+      <!-- 3. 장소 -->
+      <h3 class="mt-7 flex items-center gap-2 text-[16px] font-bold"><span class="grid h-6 w-6 place-items-center rounded-full bg-ink text-[12px] text-card">3</span>장소 선택</h3>
+      <div id="placeMap" class="keep mt-3"></div>
+
+      <!-- 3. 학생 -->
+      <h3 class="mt-7 flex items-center gap-2 text-[16px] font-bold"><span class="grid h-6 w-6 place-items-center rounded-full bg-ink text-[12px] text-card">4</span>학생 정보</h3>
+      <div id="memberRows" class="mt-3 space-y-2.5"></div>
+      <button id="btnAddMember" type="button" class="press mt-2.5 hidden h-12 w-full items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-line text-[15px] font-bold text-brand hover:bg-brandsoft disabled:opacity-40">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+        <span>학생 추가</span>
+      </button>
+
+      <!-- 4. 얼굴 촬영 -->
+      <div class="mt-7 flex items-center justify-between gap-3">
+        <h3 id="photoTitle" class="flex items-center gap-2 text-[16px] font-bold"><span class="grid h-6 w-6 place-items-center rounded-full bg-ink text-[12px] text-card">5</span><span>얼굴 촬영</span></h3>
+        <span id="camStatus" class="inline-flex items-center gap-2 text-[13px] font-medium text-mute">카메라 꺼짐</span>
+      </div>
+      <p class="mt-1 text-[13px] leading-relaxed text-mute">실제로 예약한 학생이 사용하는지 확인하는 데 씁니다.</p>
+      <div class="mx-auto mt-3 max-w-sm">
+        <div class="relative aspect-square w-full overflow-hidden rounded-[22px] bg-field">
+          <video id="video" playsinline muted autoplay class="mirror absolute inset-0 h-full w-full object-cover"></video>
+          <img id="snapshot" alt="촬영한 대표 학생 얼굴" class="absolute inset-0 hidden h-full w-full object-cover">
+          <div id="faceGuide" class="pointer-events-none absolute inset-0 hidden place-items-center">
+            <div class="h-[64%] w-[50%] rounded-[50%] border-[3px] border-dashed border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.18)]"></div>
+          </div>
+          <div id="camStart" class="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
+            <div class="grid h-16 w-16 place-items-center rounded-full bg-brandsoft text-brand">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 8a2 2 0 0 1 2-2h1.5L9 4h6l1.5 2H18a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12.5" r="3.5" stroke="currentColor" stroke-width="2"/></svg>
+            </div>
+            <p id="camStartText" class="max-w-[26ch] text-[14px] font-medium leading-relaxed text-sub">버튼을 누르면 카메라 권한을 묻는 창이 뜹니다. <b class="text-ink">허용</b>을 눌러 주세요.</p>
+            <button id="btnCamStart" type="button" class="press h-12 rounded-2xl bg-brand px-6 text-[16px] font-bold text-white">카메라 켜기</button>
+            <button id="btnCamAlt" type="button" class="press text-[14px] font-semibold text-mute underline underline-offset-4">기기 카메라 앱으로 찍기</button>
+          </div>
+          <div id="camError" class="absolute inset-0 hidden flex-col items-center justify-center gap-4 p-6 text-center">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" class="text-mute" aria-hidden="true"><path d="M3 3l18 18M9.5 5H15l1.5 2H19a2 2 0 0 1 2 2v8.5M17 19H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <p id="camErrorMsg" class="max-w-[30ch] text-[14px] font-medium leading-relaxed text-sub"></p>
+            <button type="button" data-native-cam class="press h-12 rounded-2xl bg-brand px-6 text-[16px] font-bold text-white">기기 카메라 앱으로 찍기</button>
+            <button id="btnCamRetry" type="button" class="press text-[14px] font-semibold text-mute underline underline-offset-4">카메라 다시 연결</button>
+          </div>
+          <input id="nativeCam" type="file" accept="image/*" capture="user" class="hidden">
+          <div id="flashLayer" class="pointer-events-none absolute inset-0 bg-white opacity-0"></div>
+          <div id="photoBadge" class="absolute left-3 top-3 hidden items-center gap-1.5 rounded-full bg-good px-3 py-1.5 text-[12px] font-bold text-white">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>촬영 완료
+          </div>
+        </div>
+        <button id="btnCapture" type="button" disabled class="press mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-ink text-[17px] font-bold text-card disabled:opacity-30">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 8a2 2 0 0 1 2-2h1.5L9 4h6l1.5 2H18a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12.5" r="3.5" stroke="currentColor" stroke-width="2"/></svg>
+          사진 촬영
+        </button>
+        <button id="btnRetake" type="button" class="press mt-3 hidden h-14 w-full rounded-2xl bg-field text-[17px] font-bold text-ink">다시 찍기</button>
+      </div>
+
+      <!-- 6. 동의 -->
+      <h3 class="mt-7 flex items-center gap-2 text-[16px] font-bold"><span class="grid h-6 w-6 place-items-center rounded-full bg-ink text-[12px] text-card">6</span>동의</h3>
+      <p class="mt-3 flex items-start gap-2 rounded-2xl bg-badsoft px-4 py-3 text-[14px] font-semibold leading-relaxed text-bad">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="mt-0.5 shrink-0" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v4M12 17v.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+        <span>학교 행사·시설 점검 등 학교 사정이나 관리자 판단에 따라 예약이 임의로 취소될 수 있어요. 취소되면 [내 예약 확인]에서 사유를 볼 수 있어요.</span>
+      </p>
+      <div class="mt-2 space-y-2">
+        <label class="flex cursor-pointer items-start gap-3 rounded-2xl bg-field p-4">
+          <input id="agreePenalty" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-brand">
+          <span class="text-[14px] leading-relaxed"><b>[필수] 불이익 동의</b><br><span class="text-sub">체육관 교구를 파손하거나 이용 규칙을 어기는 등 문제가 생기면, 그에 따른 불이익(변상, 체육관 이용 제한 등)을 받는 것에 동의합니다. 또한 학교 사정이나 관리자 판단으로 예약이 임의로 취소될 수 있음을 확인했습니다.</span></span>
+        </label>
+        <label class="flex cursor-pointer items-start gap-3 rounded-2xl bg-field p-4">
+          <input id="agreePrivacy" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-brand">
+          <span class="text-[14px] leading-relaxed"><b>[필수] 기록 동의</b><br><span class="text-sub">이용 확인을 위해 학번·이름·대표 학생 얼굴 사진이 기록되는 데 동의합니다. 기록은 체육관 관리에만 사용됩니다.</span></span>
+        </label>
+      </div>
+
+      </fieldset>
+
+      <p id="reserveHint" class="mt-5 min-h-5 text-[13px] font-semibold text-mute" aria-live="polite"></p>
+      <button id="btnReserve" type="submit" disabled class="press mt-2 h-14 w-full rounded-2xl bg-brand text-[17px] font-bold text-white disabled:bg-line disabled:text-mute">예약하기</button>
+    </form>
+
+    <!-- 내 예약 확인 -->
+    <section class="mt-3 rounded-[28px] bg-card p-5 sm:p-7" aria-labelledby="lookupTitle">
+      <h2 id="lookupTitle" class="text-[18px] font-bold">내 예약 확인 · 이력</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-mute">학번·이름·예약번호가 모두 맞아야 볼 수 있어요. 예약을 취소하거나 단체 인원을 바꿀 수 있고, 취소된 예약은 사유를 볼 수 있습니다.</p>
+      <form id="lookupForm" class="mt-4 grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-2 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)_minmax(0,2fr)_auto]" novalidate autocomplete="off">
+        <input id="lookupId" type="text" inputmode="numeric" maxlength="5" placeholder="학번" aria-label="학번" class="field !mt-0">
+        <input id="lookupName" type="text" maxlength="20" placeholder="이름" aria-label="이름" class="field !mt-0">
+        <input id="lookupCode" type="text" inputmode="numeric" maxlength="3" placeholder="예약번호" aria-label="예약번호" class="field !mt-0 tracking-wider">
+        <button type="submit" class="press h-14 rounded-2xl bg-ink px-6 text-[16px] font-bold text-card">조회</button>
+      </form>
+      <div id="lookupResult" class="mt-3 space-y-2"></div>
+    </section>
+  </main>
+
+  <!-- ================= 관리자 화면 ================= -->
+  <main id="viewAdmin" class="hidden">
+    <!-- 날짜 선택 -->
+    <section class="rounded-[28px] bg-card p-4 sm:p-6">
+      <div class="flex items-center justify-between gap-2">
+        <button id="weekPrev" type="button" class="press grid h-10 w-10 place-items-center rounded-full bg-field text-sub" aria-label="이전 주">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <p id="weekLabel" class="text-[15px] font-bold"></p>
+        <button id="weekNext" type="button" class="press grid h-10 w-10 place-items-center rounded-full bg-field text-sub" aria-label="다음 주">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div id="weekStrip" class="mt-3 grid grid-cols-5 gap-1.5"></div>
+      <div class="mt-3 flex items-center justify-between gap-2 border-t border-line pt-3">
+        <div class="flex items-center gap-3 text-[12px] font-semibold text-mute">
+          <span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-good"></span>점검 완료</span>
+          <span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-bad"></span>미점검</span>
+        </div>
+        <div class="flex gap-1.5">
+          <button id="btnToday" type="button" class="press h-9 rounded-full bg-field px-3.5 text-[13px] font-bold text-sub">오늘</button>
+          <button id="btnRefresh" type="button" class="press h-9 rounded-full bg-field px-3.5 text-[13px] font-bold text-sub">새로고침</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="mt-5 flex flex-wrap items-end justify-between gap-2 px-1">
+      <h2 id="adminDate" class="text-[22px] font-bold tracking-tight"></h2>
+      <span id="adminDateState" class="hidden"></span>
+    </div>
+
+    <div role="tablist" aria-label="관리 메뉴" class="mt-3 grid grid-cols-4 gap-1 rounded-[20px] bg-line/70 p-1">
+      <button role="tab" data-atab="res" class="press h-12 rounded-2xl text-[14px] font-bold">예약 현황</button>
+      <button role="tab" data-atab="inspect" class="press h-12 rounded-2xl text-[14px] font-bold">관리 점검</button>
+      <button role="tab" data-atab="ban" class="press h-12 rounded-2xl text-[14px] font-bold">이용 제한</button>
+      <button role="tab" data-atab="settings" class="press h-12 rounded-2xl text-[14px] font-bold">공지·설정</button>
+    </div>
+
+    <!-- 예약 현황 -->
+    <section id="panelRes" class="mt-3">
+      <div id="closureCard" class="mb-3 rounded-[28px] bg-card p-5 sm:p-7"></div>
+      <div class="rounded-[28px] bg-card p-4 sm:p-6">
+        <div class="flex items-baseline justify-between gap-2 px-1">
+          <h3 class="text-[17px] font-bold">사용 현황</h3>
+          <p id="resSummary" class="text-[13px] font-semibold text-sub"></p>
+        </div>
+        <div id="adminMap" class="mt-3"></div>
+      </div>
+      <div class="mt-3 rounded-[28px] bg-card p-5 sm:p-7">
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="text-[17px] font-bold">예약 명단</h3>
+          <button id="btnCopyList" type="button" class="press h-9 rounded-full bg-brandsoft px-3.5 text-[13px] font-bold text-brand">명단 복사</button>
+        </div>
+        <p class="mt-1 text-[13px] text-mute">사진을 누르면 크게 볼 수 있습니다.</p>
+        <div id="resList" class="mt-2"></div>
+        <details id="canceledWrap" class="mt-3 hidden rounded-2xl bg-field">
+          <summary class="flex items-center justify-between px-4 py-3 text-[14px] font-semibold text-sub">
+            <span id="canceledLabel"></span>
+            <svg class="chev transition-transform" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </summary>
+          <div id="canceledList" class="divide-y divide-line px-4 pb-2"></div>
+        </details>
+      </div>
+    </section>
+
+    <!-- 관리 점검 -->
+    <form id="panelInspect" class="mt-3 hidden gap-3 md:grid-cols-[1.4fr_1fr]" novalidate autocomplete="off">
+      <div class="rounded-[28px] bg-card p-5 sm:p-7">
+        <h3 class="text-[17px] font-bold">점심시간 이후 점검</h3>
+        <p id="inspectState" class="mt-1 text-[13px] text-mute"></p>
+        <div id="inspectItems" class="mt-2 divide-y divide-line"></div>
+      </div>
+      <div class="flex flex-col rounded-[28px] bg-card p-5 sm:p-7">
+        <label class="block">
+          <span class="text-[14px] font-semibold text-sub">점검자</span>
+          <input id="inspector" type="text" maxlength="20" placeholder="선생님 성함" class="field">
+        </label>
+        <label class="mt-4 block">
+          <span class="text-[14px] font-semibold text-sub">특이사항</span>
+          <textarea id="memo" rows="5" maxlength="1000" placeholder="파손된 용구, 분실물, 다음 점검 때 확인할 점 등" class="field"></textarea>
+        </label>
+        <div class="min-h-4 flex-1"></div>
+        <p id="inspectSummary" class="mt-5 rounded-2xl bg-field px-4 py-3 text-[14px] font-semibold text-sub"></p>
+        <button id="btnInspectSave" type="submit" disabled class="press mt-3 h-14 w-full rounded-2xl bg-brand text-[17px] font-bold text-white disabled:bg-line disabled:text-mute">점검 내용 저장</button>
+      </div>
+    </form>
+
+    <!-- 이용 제한 -->
+    <section id="panelBan" class="mt-3 hidden">
+      <form id="banForm" class="rounded-[28px] bg-card p-5 sm:p-7" novalidate autocomplete="off">
+        <h3 class="text-[17px] font-bold">이용 제한 등록</h3>
+        <p class="mt-1 text-[13px] leading-relaxed text-mute">등록하면 이 학생은 예약할 수 없고, 제한 기간에 이미 잡힌 예약(단체면 그 예약 전체)은 자동으로 취소됩니다.</p>
+        <div class="mt-4 grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-2">
+          <input id="banId" type="text" inputmode="numeric" maxlength="5" placeholder="학번" aria-label="학번" class="field !mt-0">
+          <input id="banName" type="text" maxlength="20" placeholder="이름" aria-label="이름" class="field !mt-0">
+        </div>
+        <div role="radiogroup" aria-label="제한 종류" class="mt-3 grid grid-cols-2 gap-1 rounded-[18px] bg-field p-1">
+          <button type="button" role="radio" data-bankind="기간" class="press h-11 rounded-[14px] text-[15px] font-bold">기간 정지</button>
+          <button type="button" role="radio" data-bankind="무기한" class="press h-11 rounded-[14px] text-[15px] font-bold">무기한</button>
+        </div>
+        <div id="banDaysRow" class="mt-3 flex items-center gap-2">
+          <button type="button" data-days="-1" class="press grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-field text-[22px] font-bold text-sub" aria-label="하루 줄이기">−</button>
+          <input id="banDays" type="number" inputmode="numeric" min="1" max="60" value="3" aria-label="정지 일수" class="field !mt-0 !w-24 text-center text-[18px]">
+          <button type="button" data-days="1" class="press grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-field text-[22px] font-bold text-sub" aria-label="하루 늘리기">+</button>
+          <span class="text-[16px] font-semibold text-sub">일</span>
+        </div>
+        <p id="banPreview" class="mt-3 rounded-2xl bg-badsoft px-4 py-3 text-[14px] font-semibold leading-relaxed text-bad"></p>
+        <input id="banReason" type="text" maxlength="200" placeholder="사유 (예: 배드민턴 라켓 파손) · 관리자만 봅니다" aria-label="사유" class="field mt-3">
+        <p id="banError" class="mt-2 min-h-5 text-[13px] font-semibold text-bad" aria-live="polite"></p>
+        <button type="submit" class="press mt-1 h-14 w-full rounded-2xl bg-bad text-[17px] font-bold text-white">이용 제한 등록</button>
+      </form>
+      <div class="mt-3 rounded-[28px] bg-card p-5 sm:p-7">
+        <h3 class="text-[17px] font-bold">제한 중인 학생 <span id="banCount" class="text-mute"></span></h3>
+        <div id="banList" class="mt-2 divide-y divide-line"></div>
+        <details id="banHistoryWrap" class="mt-3 hidden rounded-2xl bg-field">
+          <summary class="flex items-center justify-between px-4 py-3 text-[14px] font-semibold text-sub">
+            <span>해제·만료된 기록</span>
+            <svg class="chev transition-transform" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </summary>
+          <div id="banHistory" class="divide-y divide-line px-4 pb-2"></div>
+        </details>
+      </div>
+    </section>
+
+    <!-- 공지·설정 -->
+    <form id="panelSettings" class="mt-3 hidden" novalidate autocomplete="off">
+      <div class="rounded-[28px] bg-card p-5 sm:p-7">
+        <h3 class="text-[17px] font-bold">휴식 최대 인원</h3>
+        <p class="mt-1 text-[13px] text-mute">코트를 쓰지 않고 쉬러 오는 학생 수의 한도입니다. 코트는 하나당 4명, 배구는 10~20명으로 고정입니다.</p>
+        <div class="mt-3 flex items-center gap-2">
+          <input id="restCapInput" type="number" inputmode="numeric" min="0" max="300" class="field !mt-0 !w-28 text-center text-[18px]">
+          <span class="text-[16px] font-semibold text-sub">명</span>
+        </div>
+      </div>
+      <div class="mt-3 rounded-[28px] bg-card p-5 sm:p-7">
+        <h3 class="text-[17px] font-bold">공지사항</h3>
+        <p class="mt-1 text-[13px] leading-relaxed text-mute">작은 바는 두 칸씩 나란히, 긴 바는 한 줄 전체에 여러 줄로 표시됩니다. 최대 10개.</p>
+        <div id="noticeRows" class="mt-4 space-y-3"></div>
+        <div class="mt-3 grid grid-cols-2 gap-2">
+          <button type="button" data-add="short" class="press h-12 rounded-2xl bg-brandsoft text-[14px] font-bold text-brand">작은 바 추가</button>
+          <button type="button" data-add="long" class="press h-12 rounded-2xl bg-brandsoft text-[14px] font-bold text-brand">긴 바 추가</button>
+        </div>
+      </div>
+      <p id="settingsError" class="mt-3 min-h-5 px-1 text-[13px] font-semibold text-bad" aria-live="polite"></p>
+      <button type="submit" class="press mt-1 h-14 w-full rounded-2xl bg-brand text-[17px] font-bold text-white">설정 저장</button>
+      <button id="btnDemoReset" type="button" class="press mt-3 hidden h-12 w-full rounded-2xl bg-field text-[14px] font-bold text-sub">데모 데이터 처음 상태로 되돌리기</button>
+    </form>
+  </main>
+</div>
+
+<!-- 비밀번호 모달 -->
+<div id="pwModal" class="fixed inset-0 z-50 hidden items-end justify-center bg-black/40 p-4 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="pwTitle">
+  <form id="pwForm" class="sheet-in w-full max-w-sm rounded-[28px] bg-card p-6" novalidate autocomplete="off">
+    <div class="mx-auto grid h-14 w-14 place-items-center rounded-full bg-brandsoft text-brand">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4.5" y="10" width="15" height="10" rx="2.5" stroke="currentColor" stroke-width="2"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10" stroke="currentColor" stroke-width="2"/></svg>
+    </div>
+    <h3 id="pwTitle" class="mt-4 text-center text-[20px] font-bold">관리자 로그인</h3>
+    <p class="mt-1.5 text-center text-[14px] leading-relaxed text-sub">예약 현황과 점검 기록을 보려면 비밀번호를 입력하세요.</p>
+    <input id="pwInput" type="password" inputmode="numeric" placeholder="비밀번호" aria-label="비밀번호" class="field mt-5 text-center text-[20px] tracking-[0.3em]">
+    <p id="pwError" class="mt-2 h-5 text-center text-[13px] font-semibold text-bad" aria-live="polite"></p>
+    <div class="mt-3 grid grid-cols-2 gap-2">
+      <button type="button" data-close class="press h-14 rounded-2xl bg-field text-[16px] font-bold text-sub">취소</button>
+      <button type="submit" class="press h-14 rounded-2xl bg-brand text-[16px] font-bold text-white">들어가기</button>
+    </div>
+  </form>
+</div>
+
+<!-- 예약 완료 모달 -->
+<div id="doneModal" class="fixed inset-0 z-50 hidden items-center justify-center overflow-y-auto bg-black/40 p-6" role="alertdialog" aria-modal="true" aria-labelledby="doneTitle">
+  <div class="sheet-in w-full max-w-sm rounded-[28px] bg-card p-7">
+    <div class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-good text-white">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <h3 id="doneTitle" class="mt-4 text-center text-[22px] font-bold">예약 완료</h3>
+    <p id="donePlace" class="mt-1 text-center text-[17px] font-bold text-brand"></p>
+    <p id="doneDate" class="mt-0.5 text-center text-[15px] font-semibold text-sub"></p>
+
+    <div class="mt-5 rounded-[22px] border-2 border-brand bg-brandsoft px-4 pb-4 pt-3 text-center">
+      <p class="text-[14px] font-bold text-brand">예약번호</p>
+      <p id="doneCode" class="text-[64px] font-extrabold leading-none tracking-tight text-brand"></p>
+      <p class="mt-3 text-[14px] font-semibold leading-relaxed text-ink">이 번호를 꼭 기억하세요!<br><span class="font-medium text-sub">내 예약 확인·취소·인원 수정 때 학번·이름과 함께 입력해야 합니다. 다른 학생에게 알려 주지 마세요.</span></p>
+    </div>
+
+    <details class="mt-3 rounded-2xl bg-field">
+      <summary class="flex items-center justify-between px-4 py-3 text-[14px] font-semibold text-sub">
+        <span id="doneCount"></span>
+        <svg class="chev transition-transform" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <ul id="doneMembers" class="space-y-1.5 px-4 pb-4 text-[15px] font-semibold"></ul>
+    </details>
+    <button id="btnDoneClose" type="button" class="press mt-5 h-14 w-full rounded-2xl bg-brand text-[16px] font-bold text-white">예약번호를 기억했어요</button>
+  </div>
+</div>
+
+<!-- 관리자 취소 사유 -->
+<div id="cancelModal" class="fixed inset-0 z-50 hidden items-end justify-center bg-black/40 p-4 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="cancelTitle">
+  <form id="cancelForm" class="sheet-in w-full max-w-md rounded-[28px] bg-card p-6" novalidate autocomplete="off">
+    <h3 id="cancelTitle" class="text-[20px] font-bold">예약 취소</h3>
+    <p id="cancelWhat" class="mt-1 text-[14px] font-semibold text-sub"></p>
+    <p class="mt-4 text-[14px] font-semibold text-sub">취소 사유 <span class="text-bad">(필수 · 학생에게 보여요)</span></p>
+    <div id="cancelChips" class="mt-2 flex flex-wrap gap-1.5"></div>
+    <textarea id="cancelReason" rows="2" maxlength="100" placeholder="예: 체육 대회 연습으로 코트를 사용합니다." class="field"></textarea>
+    <p id="cancelError" class="mt-2 min-h-5 text-[13px] font-semibold text-bad" aria-live="polite"></p>
+    <div class="mt-2 grid grid-cols-2 gap-2">
+      <button type="button" data-close class="press h-14 rounded-2xl bg-field text-[16px] font-bold text-sub">닫기</button>
+      <button type="submit" class="press h-14 rounded-2xl bg-bad text-[16px] font-bold text-white">예약 취소하기</button>
+    </div>
+  </form>
+</div>
+
+<!-- 사진 크게 보기 -->
+<div id="photoModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-6" role="dialog" aria-modal="true" aria-labelledby="photoModalTitle">
+  <div class="sheet-in w-full max-w-xs rounded-[28px] bg-card p-5">
+    <img id="photoModalImg" alt="" class="aspect-square w-full rounded-2xl bg-field object-cover">
+    <p id="photoModalTitle" class="mt-3 text-center text-[16px] font-bold"></p>
+    <a id="photoModalLink" href="#" target="_blank" rel="noopener" class="mt-1 hidden text-center text-[13px] font-semibold text-brand underline underline-offset-4">드라이브에서 원본 보기</a>
+    <button type="button" data-close class="press mt-4 h-12 w-full rounded-2xl bg-field text-[15px] font-bold text-ink">닫기</button>
+  </div>
+</div>
+
+<!-- 로딩 -->
+<div id="loading" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/30 backdrop-blur-[2px]" aria-live="assertive">
+  <div class="flex flex-col items-center gap-4 rounded-[24px] bg-card px-9 py-7">
+    <div class="spinner"></div>
+    <p id="loadingText" class="text-[15px] font-bold">저장 중입니다...</p>
+  </div>
+</div>
+
+<!-- 토스트 -->
+<div id="toast" class="fixed left-1/2 z-[70] hidden w-max max-w-[calc(100vw-32px)] -translate-x-1/2 items-center gap-2.5 rounded-2xl bg-ink px-5 py-3.5 text-[15px] font-semibold text-card shadow-lg" style="bottom: calc(24px + env(safe-area-inset-bottom, 0px));" role="status" aria-live="polite"></div>
+
+<canvas id="captureCanvas" class="hidden"></canvas>
+
+<!-- 학교 이름·서버 주소: config.js 한 파일만 고치면 됩니다 (Apps Script 안에서 쓸 때는 없어도 됨) -->
+<script src="config.js"></script>
+<script>
+/* ============================================================
+   설정 — 배포 전에 이 부분만 바꾸면 됩니다
+   ============================================================ */
+const CONFIG = {
+  // ● GitHub Pages 등: config.js 의 GAS_URL 에 Apps Script 웹 앱 주소(https://script.google.com/macros/s/.../exec)
+  // ● 구글만으로 운영: 이 파일을 Apps Script의 HTML 파일 'index'로 넣으면 자동 연결 (GAS_URL 필요 없음)
+  // 둘 다 아니면 '데모 모드': 이 브라우저 안에만 저장됩니다. (데모 관리자 비밀번호 1234)
+  // ※ 실제 관리자 비밀번호는 Apps Script 스크립트 속성에만 있습니다.
+  GAS_URL: String((window.GYM_CONFIG && window.GYM_CONFIG.GAS_URL) || '').trim(),
+
+  SCHOOL_NAME: (window.GYM_CONFIG && window.GYM_CONFIG.SCHOOL_NAME) || 'OO중학교',
+  MAX_GROUP: 4,                 // 단체 최대 인원 (Code.gs와 같게)
+  COURT_MAX: 4,                 // 코트 하나당 최대 인원 (Code.gs와 같게)
+  DEFAULT_REST_CAPACITY: 30,    // 휴식 최대 인원 기본값 (관리자 페이지에서 변경)
+  VOLLEY_MIN: 10,               // 배구 최소 인원 (Code.gs와 같게)
+  VOLLEY_MAX: 20,               // 배구 최대 인원 (Code.gs와 같게)
+  ADMIN_IDLE_MINUTES: 10,       // 관리자 화면에서 이 시간 동안 조작이 없으면 자동 잠금
+  OPEN_WEEKDAY: 0,              // 다음 주 예약이 열리는 요일 (0 = 일요일, Code.gs와 같게)
+  OPEN_HOUR: 17,                // 열리는 시각 (17 = 오후 5시, Code.gs와 같게)
+
+  // 시트에 공지가 아직 없을 때 보여 줄 기본값 (size: 'short' 작은 바 / 'long' 긴 바)
+  DEFAULT_NOTICES: [
+    { size: 'short', text: '실내화 착용 필수, 외부 신발은 입구 신발장에' },
+    { size: 'short', text: '음식물·음료 반입 금지 (물은 허용)' },
+    { size: 'short', text: '사용한 공과 용구는 제자리에 정리' },
+    { size: 'short', text: '점심시간 종료 5분 전까지 퇴실' },
+    { size: 'long',  text: '예약한 곳만 사용할 수 있습니다. 예약번호는 꼭 기억해 두고, 못 오게 되면 [내 예약 확인]에서 취소해 주세요.\n학교 사정이나 관리자 판단에 따라 예약이 임의로 취소될 수 있으며, 취소 사유는 [내 예약 확인]에서 볼 수 있습니다.' }
+  ]
+};
+
+const COURTS = ['코트 1', '코트 2', '코트 3', '코트 4', '코트 5'];
+const BIG_COURTS = ['코트 1', '코트 2', '코트 3', '코트 4'];   // 대체육관
+const REST = '휴식';
+const VOLLEY = '배구';
+const PLACES = [...COURTS, REST, VOLLEY];
+const HALL = { '코트 1': '대체육관', '코트 2': '대체육관', '코트 3': '대체육관', '코트 4': '대체육관', '코트 5': '소체육관' };
+const CLOSED_REASON = '체육관 개방하지 않음';
+const placeLabel = (p) => (p === VOLLEY ? '배구 (대체육관 전체)' : HALL[p] ? `${HALL[p]} ${p}` : p);
+const NOTICE_MAX = { short: 60, long: 500 };
+// 관리 점검 항목 — good(문제 없음) / bad(문제 있음) 답 (Code.gs의 INSPECT_ITEMS와 같게)
+const INSPECT_ITEMS = [
+  { key: 'equipment',   label: '용구 정리 상태',           desc: '공·매트·네트가 제자리에 있는지',  good: '양호', bad: '불량' },
+  { key: 'cleanliness', label: '쓰레기 및 청결 상태',       desc: '바닥 쓰레기, 음식물 흔적',        good: '양호', bad: '불량' },
+  { key: 'safety',      label: '안전 문제가 있었는가?',     desc: '다친 학생, 위험한 행동, 시설 파손 등', good: '없음', bad: '있음' },
+  { key: 'other',       label: '그 밖의 문제가 있었는가?',  desc: '위 항목 말고 확인이 필요한 일',     good: '없음', bad: '있음' }
+];
+const inspectBadCount = (items) => INSPECT_ITEMS.filter((it) => items[it.key] === it.bad).length;
+
+/* ============================================================ */
+const $ = (s) => document.querySelector(s);
+const el = {};
+document.querySelectorAll('[id]').forEach((n) => { el[n.id] = n; });
+
+const state = {
+  view: 'student',
+  pub: { today: '', days: null, nextOpen: '', date: '', bookable: false, restCapacity: CONFIG.DEFAULT_REST_CAPACITY, occupancy: null, notices: [] },
+  type: 'single',
+  place: null,
+  members: [{ id: '', name: '', ban: '' }, { id: '', name: '', ban: '' }],
+  photo: null, thumb: null, stream: null, camOn: false,
+  admin: { pw: null, date: '', tab: 'res', data: null, inspect: {}, idleTimer: null, banKind: '기간' }
+};
+
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
+  del(k) { try { localStorage.removeItem(k); } catch {} }
+};
+
+// 실행 환경: 구글(Apps Script 안) / 외부 주소 + GAS_URL / 데모
+const IN_GAS = typeof google !== 'undefined' && !!(google.script && google.script.run);
+const HAS_URL = /^https:\/\/script\.google\.com\/macros\//.test(CONFIG.GAS_URL.trim());
+const isConnected = () => IN_GAS || HAS_URL;
+const DEMO_PASSWORD = '1234'; // 데모 모드 전용 (실제 비밀번호는 Code.gs)
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/* ---------- 날짜 (한국 시간 기준) ---------- */
+const TZ = 'Asia/Seoul';
+function seoulNow() {
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
+  const g = (t) => parts.find((p) => p.type === t).value;
+  const hh = g('hour') === '24' ? '00' : g('hour');
+  return { date: `${g('year')}-${g('month')}-${g('day')}`, hour: Number(hh), stamp: `${g('year')}-${g('month')}-${g('day')} ${hh}:${g('minute')}` };
+}
+const utc = (s) => new Date(s + 'T00:00:00Z');
+const dow = (s) => utc(s).getUTCDay();
+function addDays(s, n) { const d = utc(s); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+const isWeekend = (s) => dow(s) === 0 || dow(s) === 6;
+function nextSchoolDay(s) { let d = addDays(s, 1); while (isWeekend(d)) d = addDays(d, 1); return d; }
+function prevSchoolDay(s) { let d = addDays(s, -1); while (isWeekend(d)) d = addDays(d, -1); return d; }
+function addSchoolDays(start, n) { let d = start; for (let i = 0; i < n; i++) d = nextSchoolDay(d); return d; }
+const WD = '일월화수목금토';
+function fmtDate(s, withDow = true) { const [, m, d] = s.split('-').map(Number); return `${m}월 ${d}일` + (withDow ? ` (${WD[dow(s)]})` : ''); }
+function weekOf(s) { const mon = addDays(s, -((dow(s) + 6) % 7)); return [0, 1, 2, 3, 4].map((i) => addDays(mon, i)); }
+// 예약 주간: 매주 일요일 오후 5시에 다음 주(월~금)가 열림 (Code.gs의 openWeek_와 같음)
+function openWeek() {
+  const n = seoulNow(), today = n.date;
+  const since = (dow(today) - CONFIG.OPEN_WEEKDAY + 7) % 7;
+  let openDay = addDays(today, -since);
+  if (since === 0 && n.hour < CONFIG.OPEN_HOUR) openDay = addDays(openDay, -7);
+  let monday = addDays(openDay, 1);
+  while (dow(monday) !== 1) monday = addDays(monday, 1);
+  const days = [0, 1, 2, 3, 4].map((i) => addDays(monday, i));
+  const nextOpen = addDays(openDay, 7);
+  return { today, days, nextOpenLabel: `${fmtDate(nextOpen)} ${openHourLabel()}` };
+}
+function dateError(date, week, closed) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date || ''))) return '예약할 날짜를 선택하세요.';
+  if (date <= week.today) return '지난 날짜나 오늘은 예약할 수 없습니다.';
+  if (!week.days.includes(date)) return `아직 예약할 수 없는 날짜입니다. 다음 주 예약은 ${week.nextOpenLabel}에 열립니다.`;
+  if (closed[date]) return `${fmtDate(date)}은 체육관을 열지 않습니다.`;
+  return '';
+}
+function fmtStamp(st) { if (!st) return ''; const [d, t] = st.split(' '); const [, m, dd] = d.split('-').map(Number); return `${m}/${dd} ${t || ''}`.trim(); }
+
+/* ---------- 공통 UI ---------- */
+function show(node, d = 'flex') { node.classList.remove('hidden'); node.classList.add(d); }
+function hide(node, d = 'flex') { node.classList.add('hidden'); node.classList.remove(d); }
+
+let toastTimer;
+function toast(message, type = 'success') {
+  const icon = type === 'error'
+    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="rgb(var(--bad))"/><path d="M12 7v6M12 16.5v.5" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>'
+    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="rgb(var(--good))"/><path d="M7.5 12.5l3 3 6-6.5" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  el.toast.innerHTML = icon + '<span></span>';
+  el.toast.querySelector('span').textContent = message;
+  el.toast.classList.remove('toast-in'); void el.toast.offsetWidth; el.toast.classList.add('toast-in');
+  show(el.toast);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => hide(el.toast), type === 'error' ? 4500 : 2600);
+}
+function setLoading(on, text = '저장 중입니다...') { el.loadingText.textContent = text; on ? show(el.loading) : hide(el.loading); }
+
+// 로딩 표시 → 실행 → 오류 표시를 한 곳에서 처리 (onError로 오류를 띄울 곳을 바꿀 수 있음)
+async function task(text, fn, onError = (msg) => toast(msg, 'error')) {
+  setLoading(true, text);
+  try { return await fn(); }
+  catch (err) { onError(err.message); }
+  finally { setLoading(false); }
+}
+
+// 버튼 묶음에서 하나만 켜진 상태로 칠하기 (구분·탭·공지 크기 등)
+function paintChoice(buttons, isOn, base, onCls, offCls, attr = 'aria-checked') {
+  buttons.forEach((b) => {
+    const on = isOn(b);
+    b.setAttribute(attr, String(on));
+    b.className = `${base} ${on ? onCls : offCls}`;
+  });
+}
+
+// 예약할 수 없는 배치도: 전체 회색 + 가운데 안내
+function frozenMap(mapHtml, label, badge = 'bg-ink text-card') {
+  return `<div class="relative">
+    <div class="pointer-events-none select-none opacity-50 grayscale" aria-hidden="true">${mapHtml}</div>
+    <div class="absolute inset-0 grid place-items-center p-4"><span class="rounded-full ${badge} px-5 py-2.5 text-center text-[15px] font-bold shadow-lg">${label}</span></div>
+  </div>`;
+}
+
+// "07번 · 대체육관 코트 1 · 30215 홍길동 외 2명"
+const resSummary = (r) => `${r.code}번 · ${placeLabel(r.place)} · ${r.members[0].id} ${r.members[0].name}${r.members.length > 1 ? ` 외 ${r.members.length - 1}명` : ''}`;
+const openHourLabel = () => (CONFIG.OPEN_HOUR > 12 ? `오후 ${CONFIG.OPEN_HOUR - 12}시` : `오전 ${CONFIG.OPEN_HOUR}시`);
+const infoIcon = (size = 20) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" class="mt-0.5 shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="2"/><path d="M12 11v6M12 7.5v.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>`;
+
+// 두 번 눌러야 실행되는 버튼 (확인 창 대신)
+function armButton(btn, armedText, onConfirm) {
+  if (btn.dataset.armed === '1') { clearTimeout(btn._t); btn.dataset.armed = ''; onConfirm(); return; }
+  btn.dataset.armed = '1';
+  btn._orig = btn._orig || { text: btn.textContent, cls: btn.className };
+  btn.textContent = armedText;
+  btn.className = btn._orig.cls.replace(/bg-\S+|text-(sub|mute|brand|bad)\b/g, '') + ' bg-bad text-white';
+  btn._t = setTimeout(() => { btn.dataset.armed = ''; btn.textContent = btn._orig.text; btn.className = btn._orig.cls; }, 3000);
+}
+
+/* ============================================================
+   서버 통신 (데모 모드면 이 브라우저 안의 가짜 서버 사용)
+   ============================================================ */
+async function api(payload) {
+  if (IN_GAS) return gasRun(payload);
+  if (!HAS_URL) {
+    await sleep(payload.action === 'checkBan' ? 120 : 450);
+    const fn = demoServer[payload.action];
+    if (!fn) throw new Error('알 수 없는 요청입니다.');
+    return JSON.parse(JSON.stringify(fn(payload)));
+  }
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 30000);
+  try {
+    // Content-Type을 지정하지 않으면 text/plain으로 전송되어 CORS 사전 요청 없이 Apps Script에 도달합니다.
+    const res = await fetch(CONFIG.GAS_URL.trim(), { method: 'POST', body: JSON.stringify(payload), signal: ctrl.signal });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || '요청을 처리하지 못했습니다.');
+    return data;
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error('응답 시간이 초과되었습니다. 네트워크를 확인하고 다시 시도하세요.');
+    if (err instanceof TypeError) throw new Error('서버에 연결하지 못했습니다. 웹 앱 URL과 배포 권한을 확인하세요.');
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// 구글 안에서는 google.script.run으로 Code.gs의 api()를 바로 부름
+function gasRun(payload) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('응답 시간이 초과되었습니다. 잠시 후 다시 시도하세요.')), 30000);
+    google.script.run
+      .withSuccessHandler((data) => {
+        clearTimeout(timer);
+        if (!data || !data.ok) reject(new Error((data && data.error) || '요청을 처리하지 못했습니다.'));
+        else resolve(data);
+      })
+      .withFailureHandler((err) => {
+        clearTimeout(timer);
+        reject(new Error('서버에 연결하지 못했습니다. 잠시 후 다시 시도하세요.' + (err && err.message ? ` (${err.message})` : '')));
+      })
+      .api(payload);
+  });
+}
+
+/* ---------- 규칙 (Code.gs와 같음) ---------- */
+function validateMembers(type, members, place) {
+  if (type !== '개인' && type !== '단체') throw new Error('예약 구분을 선택하세요.');
+  const list = (members || []).map((m) => ({ id: String(m.id || '').trim(), name: String(m.name || '').replace(/[,\n]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 20) }));
+  if (place === VOLLEY) {
+    if (type !== '단체') throw new Error('배구는 단체로만 예약할 수 있습니다.');
+    if (list.length < CONFIG.VOLLEY_MIN || list.length > CONFIG.VOLLEY_MAX) throw new Error(`배구는 ${CONFIG.VOLLEY_MIN}~${CONFIG.VOLLEY_MAX}명이어야 합니다.`);
+  } else {
+    if (type === '개인' && list.length !== 1) throw new Error('개인 예약은 1명만 등록합니다.');
+    if (type === '단체' && (list.length < 2 || list.length > CONFIG.MAX_GROUP)) throw new Error(`단체 예약은 2~${CONFIG.MAX_GROUP}명입니다.`);
+  }
+  const seen = new Set();
+  list.forEach((m, i) => {
+    if (!/^\d{5}$/.test(m.id)) throw new Error(`${i + 1}번째 학생의 학번을 5자리 숫자로 입력하세요.`);
+    if (!m.name) throw new Error(`${i + 1}번째 학생의 이름을 입력하세요.`);
+    if (seen.has(m.id)) throw new Error(`학번 ${m.id}이(가) 두 번 입력되었습니다.`);
+    seen.add(m.id);
+  });
+  return list;
+}
+function emptyOcc() { const o = {}; PLACES.forEach((p) => { o[p] = { people: 0, group: false }; }); return o; }
+function occupancyOf(active) {
+  const occ = emptyOcc();
+  active.forEach((r) => { const o = occ[r.place]; if (!o) return; o.people += r.members.length; if (r.type === '단체') o.group = true; });
+  return occ;
+}
+// 예약할 수 없으면 이유, 가능하면 ''
+function placeError(place, type, n, occ, restCap) {
+  if (place === VOLLEY) {
+    if (type !== '단체') return '배구는 단체로만 예약할 수 있습니다.';
+    if (occ[VOLLEY].people > 0) return '이 날은 이미 배구 예약이 있습니다.';
+    if (BIG_COURTS.some((c) => occ[c].people > 0)) return '대체육관 코트에 먼저 들어온 예약이 있어 배구를 예약할 수 없습니다.';
+    if (n < CONFIG.VOLLEY_MIN) return `배구는 ${CONFIG.VOLLEY_MIN}명 이상이어야 예약할 수 있습니다.`;
+    return '';
+  }
+  if (place === REST) {
+    const left = restCap - occ[REST].people;
+    if (n > left) return left > 0 ? `휴식 자리가 ${left}명 남아 ${n}명은 예약할 수 없습니다.` : '휴식 자리가 마감되었습니다.';
+    return '';
+  }
+  if (BIG_COURTS.includes(place) && occ[VOLLEY].people > 0) return '배구 예약이 먼저 들어와 대체육관 전체를 사용합니다.';
+  const o = occ[place];
+  if (type === '단체') return o.people > 0 ? `${place} 자리에 이미 다른 학생이 예약되어 단체로 쓸 수 없습니다. 비어 있는 코트를 고르세요.` : '';
+  if (o.group || o.people >= CONFIG.COURT_MAX) return `${place} 자리가 마감되었습니다.`;
+  return '';
+}
+function banMessage(b) {
+  if (b.kind === '무기한') return '점심시간에 체육관을 이용할 수 없는 학생이에요';
+  return `${b.days}일간 체육관을 이용할 수 없는 학생이에요 (${fmtDate(b.end)}까지)`;
+}
+function activeBanFor(bans, sid, date) {
+  return bans.find((b) => b.status === '적용' && b.studentId === sid && (b.kind === '무기한' || (b.start <= date && date <= b.end))) || null;
+}
+
+/* ============================================================
+   데모 서버 — Code.gs와 같은 동작을 브라우저 저장소로 흉내 냄
+   ============================================================ */
+const DEMO_KEY = 'gym.demo.v5';
+let demoMem = null;
+function demoDb() { if (!demoMem) demoMem = store.get(DEMO_KEY) || seedDemo(); return demoMem; }
+function demoSave() {
+  if (store.set(DEMO_KEY, demoMem)) return;
+  // 저장 공간이 부족하면 오래된 사진부터 지움
+  demoMem.reservations.forEach((r, i) => { if (i < demoMem.reservations.length - 10) r.thumb = ''; });
+  store.set(DEMO_KEY, demoMem);
+}
+const shortId = (p = '') => p + Math.random().toString(36).slice(2, 8).toUpperCase();
+const normCode = (c) => { const s = String(c || '').trim(); return /^\d$/.test(s) ? '0' + s : s; };
+function demoCode(db, date, volley) {
+  const from = volley ? 100 : 1, to = volley ? 120 : 99;
+  const used = new Set(db.reservations.filter((r) => r.date === date).map((r) => r.code));
+  const free = [];
+  for (let n = from; n <= to; n++) { const c = n < 10 ? '0' + n : String(n); if (!used.has(c)) free.push(c); }
+  if (!free.length) throw new Error('이 날은 더 이상 예약번호를 만들 수 없습니다. 관리자에게 문의하세요.');
+  return free[Math.floor(Math.random() * free.length)];
+}
+function credOf(p) {
+  const id = String(p.studentId || '').trim(), name = String(p.name || '').trim(), code = normCode(p.code);
+  if (!/^\d{5}$/.test(id) || !name) throw new Error('학번 5자리와 이름을 입력하세요.');
+  if (!/^\d{2,3}$/.test(code)) throw new Error('예약번호를 입력하세요.');
+  return { id, name, code };
+}
+const isMine = (r, c) => r.code === c.code && r.members.some((m) => m.id === c.id && m.name === c.name);
+
+function seedDemo() {
+  const now = seoulNow().date;
+  const base = isWeekend(now) ? prevSchoolDay(now) : now;
+  const target = nextSchoolDay(now), before = prevSchoolDay(base), before2 = prevSchoolDay(before);
+  const week = openWeek();
+  const bookable = week.days.filter((d) => d > week.today);
+  const d0 = bookable[0] || week.days[4], d1 = bookable[1] || d0;
+  const closeDay = bookable.length >= 3 ? bookable[bookable.length - 1] : '';
+  const mk = (date, code, place, type, members, createdAt, status = '예약', reason = '') => ({ key: `${date}#${code}`, code, createdAt, date, place, type, members, status, updatedAt: status === '예약' ? '' : `${base} 14:10`, reason, thumb: '', photoUrl: '' });
+  const m = (id, name) => ({ id, name });
+  const volleyNames = ['김민준', '박지호', '이도윤', '정하준', '최서준', '조은우', '윤시우', '장하린', '임지안', '한유준', '오서윤', '신지호'];
+  return {
+    reservations: [
+      mk(before, '23', '코트 1', '단체', [m('20107', '김민준'), m('20112', '박지호'), m('20118', '이도윤')], `${before2} 15:10`),
+      mk(base, '107', VOLLEY, '단체', volleyNames.map((n, i) => m(String(20101 + i), n)), `${before} 12:40`),
+      mk(base, '41', '코트 5', '개인', [m('30311', '최유나')], `${before} 13:05`),
+      mk(base, '15', REST, '개인', [m('30320', '문가은')], `${before} 16:20`),
+      mk(d0, '62', '코트 5', '단체', [m('10203', '한서진'), m('10209', '오지안'), m('10221', '윤채원')], `${base} 08:20`),
+      mk(d0, '09', REST, '단체', [m('20301', '배수아'), m('20305', '임하윤')], `${base} 11:40`),
+      mk(d0, '35', REST, '개인', [m('30215', '홍길동')], `${base} 12:02`, '관리자 취소', '같은 학생의 중복 예약이 확인되어 취소했습니다.'),
+      mk(d1, '41', '코트 1', '개인', [m('30110', '나윤서')], `${base} 12:30`)
+    ],
+    closures: closeDay ? { [closeDay]: { memo: '학교 축제', createdAt: `${base} 13:00` } } : {},
+    inspections: {
+      [before]: { inspector: '김OO', items: { equipment: '양호', cleanliness: '불량', safety: '없음', other: '없음' }, memo: '배드민턴 셔틀콕이 바닥에 남아 있음', savedAt: `${before} 13:25` }
+    },
+    bans: [
+      { id: 'BDEMO1', studentId: '20230', name: '강예준', kind: '기간', start: target, end: addSchoolDays(target, 2), days: 3, reason: '배드민턴 라켓 파손', createdAt: `${base} 13:30`, status: '적용', liftedAt: '' },
+      { id: 'BDEMO2', studentId: '10115', name: '서지우', kind: '무기한', start: target, end: '', days: 0, reason: '반복된 규칙 위반', createdAt: `${base} 13:35`, status: '적용', liftedAt: '' }
+    ],
+    settings: { notices: normNotices(CONFIG.DEFAULT_NOTICES), restCapacity: CONFIG.DEFAULT_REST_CAPACITY }
+  };
+}
+
+function demoDateError(db, date) {
+  return dateError(date, openWeek(), db.closures || {});
+}
+const activeOn = (db, date) => db.reservations.filter((r) => r.date === date && r.status === '예약');
+const peopleOf = (list) => list.reduce((n, r) => n + r.members.length, 0);
+function demoCheckPw(p) { if (String(p.password || '') !== DEMO_PASSWORD) throw new Error('비밀번호가 올바르지 않습니다.'); }
+const stripPhoto = ({ thumb, photoUrl, ...rest }) => rest;
+function demoFind(db, key) {
+  const list = db.reservations.filter((r) => r.key === key);
+  return list.find((r) => r.status === '예약') || list[0] || null;
+}
+function demoBanCheck(db, members, date) {
+  for (const m of members) {
+    const ban = activeBanFor(db.bans, m.id, date);
+    if (ban) throw new Error(`${m.id} ${m.name} 학생은 ${banMessage(ban).replace(/학생이에요.*$/, '학생이라 예약할 수 없습니다.')}`);
+  }
+}
+function demoMine(db, p) {  // 취소·인원 수정 가능한 내 예약
+  const c = credOf(p);
+  const r = demoFind(db, p.key);
+  if (!r || r.status !== '예약' || !isMine(r, c)) throw new Error('학번·이름·예약번호가 맞는 예약이 없습니다. 다시 조회하세요.');
+  if (r.date < seoulNow().date) throw new Error('지난 예약은 바꿀 수 없습니다.');
+  return r;
+}
+
+const demoServer = {
+  public() {
+    const db = demoDb(); const week = openWeek(); const closed = db.closures || {};
+    const days = week.days.map((d) => ({ date: d, past: d <= week.today, closed: !!closed[d], closedMemo: closed[d] ? closed[d].memo : '', occupancy: occupancyOf(activeOn(db, d)) }));
+    return { ok: true, today: week.today, days, nextOpen: week.nextOpenLabel, restCapacity: db.settings.restCapacity, notices: db.settings.notices };
+  },
+  login(p) { demoCheckPw(p); return { ok: true }; },
+  checkBan(p) {
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(String(p.date || '')) ? p.date : nextSchoolDay(seoulNow().date);
+    const ban = activeBanFor(demoDb().bans, String(p.studentId || ''), date);
+    return ban ? { ok: true, banned: true, message: banMessage(ban) } : { ok: true, banned: false };
+  },
+  reserve(p) {
+    const db = demoDb(); const target = String(p.date || '');
+    const dErr = demoDateError(db, target);
+    if (dErr) throw new Error(dErr);
+    if (!PLACES.includes(p.place)) throw new Error('예약할 장소를 선택하세요.');
+    const members = validateMembers(p.type, p.members, p.place);
+    if (p.agreePrivacy !== true || p.agreePenalty !== true) throw new Error('동의 항목에 모두 체크해야 예약할 수 있습니다.');
+    if (!p.photo || !p.thumb) throw new Error('대표 학생 얼굴 사진을 촬영하세요.');
+    demoBanCheck(db, members, target);
+    const active = activeOn(db, target);
+    for (const m of members) {
+      if (active.some((r) => r.members.some((x) => x.id === m.id))) throw new Error(`${m.id} ${m.name} 학생은 이미 ${fmtDate(target)}에 예약되어 있습니다.`);
+    }
+    const err = placeError(p.place, p.type, members.length, occupancyOf(active), db.settings.restCapacity);
+    if (err) throw new Error(err);
+    const code = demoCode(db, target, p.place === VOLLEY);
+    const r = { key: `${target}#${code}`, code, createdAt: seoulNow().stamp, date: target, place: p.place, type: p.type, members, status: '예약', updatedAt: '', reason: '', thumb: p.thumb, photoUrl: '' };
+    db.reservations.push(r); demoSave();
+    return { ok: true, reservation: stripPhoto(r) };
+  },
+  lookup(p) {
+    const db = demoDb(); const c = credOf(p); const today = seoulNow().date; const since = addDays(today, -60);
+    const list = db.reservations.filter((r) => r.date >= since && isMine(r, c)).sort((a, b) => b.date.localeCompare(a.date));
+    if (!list.length) throw new Error('학번·이름·예약번호가 맞는 예약이 없습니다. 다시 확인하세요.');
+    return { ok: true, today, reservations: list.map(stripPhoto) };
+  },
+  cancel(p) {
+    const db = demoDb(); const r = demoMine(db, p);
+    r.status = '취소'; r.reason = ''; r.updatedAt = seoulNow().stamp; demoSave();
+    return { ok: true };
+  },
+  updateMembers(p) {
+    const db = demoDb(); const r = demoMine(db, p);
+    if (r.type !== '단체') throw new Error('개인 예약은 인원을 바꿀 수 없습니다. 취소 후 다시 예약하세요.');
+    const members = validateMembers('단체', p.members, r.place);
+    if (members[0].id !== r.members[0].id) throw new Error('대표 학생은 바꿀 수 없습니다. 대표를 바꾸려면 취소 후 다시 예약하세요.');
+    demoBanCheck(db, members, r.date);
+    const others = activeOn(db, r.date).filter((x) => x !== r);
+    for (const m of members) {
+      if (others.some((x) => x.members.some((y) => y.id === m.id))) throw new Error(`${m.id} ${m.name} 학생은 이미 ${fmtDate(r.date)}에 다른 예약이 있습니다.`);
+    }
+    if (r.place === REST) {
+      const left = db.settings.restCapacity - peopleOf(others.filter((x) => x.place === REST));
+      if (members.length > left) throw new Error(`휴식 자리가 ${left}명 남아 ${members.length}명으로 바꿀 수 없습니다.`);
+    }
+    r.members = members; r.updatedAt = seoulNow().stamp; demoSave();
+    return { ok: true, members };
+  },
+  admin(p) {
+    demoCheckPw(p); const db = demoDb(); const today = seoulNow().date;
+    const day = db.reservations.filter((r) => r.date === p.date).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    const week = (p.dates || []).map((d) => { const a = activeOn(db, d); return { date: d, count: a.length, people: peopleOf(a), inspected: !!db.inspections[d] }; });
+    const bans = db.bans.map((b) => ({ ...b, status: b.status === '적용' && (b.kind === '무기한' || b.end >= today) ? '적용' : (b.status === '해제' ? '해제' : '만료') }));
+    const closed = db.closures || {};
+    week.forEach((w) => { w.closed = !!closed[w.date]; });
+    return {
+      ok: true, restCapacity: db.settings.restCapacity, notices: db.settings.notices,
+      day: { date: p.date, reservations: day, inspection: db.inspections[p.date] || null, closed: closed[p.date] || null }, week,
+      bans: bans.filter((b) => b.status === '적용'), banHistory: bans.filter((b) => b.status !== '적용').reverse().slice(0, 20)
+    };
+  },
+  adminCancel(p) {
+    demoCheckPw(p); const db = demoDb();
+    const reason = String(p.reason || '').replace(/\s+/g, ' ').trim().slice(0, 100);
+    if (!reason) throw new Error('취소 사유를 입력하세요. 학생이 [내 예약 확인]에서 이 사유를 보게 됩니다.');
+    const r = demoFind(db, p.key);
+    if (!r || r.status !== '예약') throw new Error('이미 취소되었거나 없는 예약입니다.');
+    r.status = '관리자 취소'; r.reason = reason; r.updatedAt = seoulNow().stamp; demoSave();
+    return { ok: true };
+  },
+  setClosed(p) {
+    demoCheckPw(p); const db = demoDb(); db.closures = db.closures || {};
+    const date = String(p.date || '');
+    if (date < seoulNow().date) throw new Error('지난 날짜는 바꿀 수 없습니다.');
+    const memo = String(p.memo || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+    if (!p.closed) {
+      if (!db.closures[date]) throw new Error('이 날은 이미 열려 있습니다.');
+      delete db.closures[date]; demoSave();
+      return { ok: true, closed: false };
+    }
+    if (db.closures[date]) throw new Error('이 날은 이미 닫혀 있습니다.');
+    db.closures[date] = { memo, createdAt: seoulNow().stamp };
+    const reason = memo ? `${CLOSED_REASON} (${memo})` : CLOSED_REASON;
+    let canceled = 0;
+    db.reservations.forEach((r) => { if (r.date === date && r.status === '예약') { r.status = '관리자 취소'; r.reason = reason; r.updatedAt = seoulNow().stamp; canceled++; } });
+    demoSave();
+    return { ok: true, closed: true, canceled };
+  },
+  inspection(p) {
+    demoCheckPw(p); const db = demoDb();
+    if (p.date > seoulNow().date) throw new Error('이용일이 지난 뒤에 점검을 기록할 수 있습니다.');
+    if (!String(p.inspector || '').trim()) throw new Error('점검자 이름을 입력하세요.');
+    const items = p.items || {};
+    if (INSPECT_ITEMS.some((it) => ![it.good, it.bad].includes(items[it.key]))) throw new Error('모든 점검 항목을 선택하세요.');
+    if (inspectBadCount(items) && !String(p.memo || '').trim()) throw new Error('문제가 있는 항목이 있으면 특이사항에 내용을 적어 주세요.');
+    db.inspections[p.date] = { inspector: p.inspector.trim(), items: { ...p.items }, memo: String(p.memo || '').trim(), savedAt: seoulNow().stamp };
+    demoSave();
+    return { ok: true };
+  },
+  saveSettings(p) {
+    demoCheckPw(p); const db = demoDb();
+    const cap = Math.round(Number(p.restCapacity));
+    if (!(cap >= 0 && cap <= 300)) throw new Error('휴식 최대 인원은 0~300명 사이로 입력하세요.');
+    db.settings = { notices: normNotices(p.notices), restCapacity: cap }; demoSave();
+    return { ok: true, settings: db.settings };
+  },
+  addBan(p) {
+    demoCheckPw(p); const db = demoDb();
+    const sid = String(p.studentId || '').trim(), name = String(p.name || '').trim();
+    if (!/^\d{5}$/.test(sid)) throw new Error('학번을 5자리 숫자로 입력하세요.');
+    if (!name) throw new Error('이름을 입력하세요.');
+    const kind = p.kind === '무기한' ? '무기한' : '기간';
+    const days = kind === '기간' ? Math.round(Number(p.days)) : 0;
+    if (kind === '기간' && !(days >= 1 && days <= 60)) throw new Error('정지 일수는 1~60일 사이로 입력하세요.');
+    const start = nextSchoolDay(seoulNow().date);
+    const end = kind === '기간' ? addSchoolDays(start, days - 1) : '';
+    if (activeBanFor(db.bans, sid, start)) throw new Error(`${sid} ${name} 학생은 이미 이용 제한 중입니다. 기존 제한을 해제한 뒤 다시 등록하세요.`);
+    db.bans.push({ id: shortId('B'), studentId: sid, name, kind, start, end, days, reason: String(p.reason || '').trim(), createdAt: seoulNow().stamp, status: '적용', liftedAt: '' });
+    let canceled = 0;
+    db.reservations.forEach((r) => {
+      if (r.status !== '예약' || r.date < start || (end && r.date > end)) return;
+      if (!r.members.some((m) => m.id === sid)) return;
+      r.status = '이용 제한 취소'; r.reason = '체육관 이용이 제한된 학생이 포함되어 취소되었습니다.'; r.updatedAt = seoulNow().stamp; canceled++;
+    });
+    demoSave();
+    return { ok: true, start, end, canceled };
+  },
+  liftBan(p) {
+    demoCheckPw(p); const db = demoDb();
+    const b = db.bans.find((x) => x.id === p.banId);
+    if (!b || b.status !== '적용') throw new Error('이미 해제되었거나 없는 제한입니다.');
+    b.status = '해제'; b.liftedAt = seoulNow().stamp; demoSave();
+    return { ok: true };
+  }
+};
+
+/* ============================================================
+   공지
+   ============================================================ */
+function normNotice(n) {
+  if (typeof n === 'string') return { size: 'short', text: n.trim() };
+  const size = n && n.size === 'long' ? 'long' : 'short';
+  let text = String((n && n.text) || '').trim();
+  if (size === 'short') text = text.replace(/\s*\n\s*/g, ' ');
+  return { size, text: text.slice(0, NOTICE_MAX[size]) };
+}
+function normNotices(list) { return (Array.isArray(list) ? list : []).map(normNotice).filter((n) => n.text).slice(0, 10); }
+
+const CHECK_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="mt-0.5 shrink-0" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function renderNotices(notices) {
+  el.noticeList.replaceChildren(...notices.map((n) => {
+    const li = document.createElement('li');
+    if (n.size === 'long') {
+      li.className = 'flex items-start gap-3 rounded-2xl bg-white/20 px-4 py-4 text-[15px] font-medium leading-relaxed sm:col-span-2 sm:px-5 sm:text-[16px]';
+      li.innerHTML = infoIcon() + '<span class="min-w-0 whitespace-pre-line break-words"></span>';
+    } else {
+      li.className = 'flex items-start gap-2.5 rounded-2xl bg-white/15 px-4 py-3 text-[15px] font-semibold leading-snug sm:text-[16px]';
+      li.innerHTML = CHECK_ICON + '<span class="min-w-0 break-words"></span>';
+    }
+    li.querySelector('span').textContent = n.text;
+    return li;
+  }));
+  if (!notices.length) el.noticeList.innerHTML = '<li class="text-[14px] text-white/80">등록된 공지가 없습니다.</li>';
+}
+
+/* ============================================================
+   체육관 배치도 (학생 선택용 / 관리자 현황용 공용)
+   ============================================================ */
+function courtStatus(place, occ) {
+  const o = occ[place], max = CONFIG.COURT_MAX;
+  if (BIG_COURTS.includes(place) && occ[VOLLEY].people > 0) return { closed: true, count: '배구', sub: '배구 예약 사용' };
+  if (o.group) return { closed: true, count: `${o.people}/${max}`, sub: '단체 사용 · 마감' };
+  if (o.people >= max) return { closed: true, count: `${o.people}/${max}`, sub: '마감' };
+  if (o.people === 0) return { closed: false, count: `0/${max}`, sub: '비어 있음' };
+  return { closed: false, count: `${o.people}/${max}`, sub: `개인 · ${max - o.people}자리 남음` };
+}
+function restStatus(occ, cap) {
+  const n = occ[REST].people, left = cap - n;
+  return { closed: left <= 0, count: `${n}/${cap}`, sub: left > 0 ? `${left}자리 남음` : '마감' };
+}
+function volleyStatus(occ) {
+  if (occ[VOLLEY].people > 0) return { closed: true, count: `${occ[VOLLEY].people}명`, sub: '예약됨 · 마감' };
+  if (BIG_COURTS.some((c) => occ[c].people > 0)) return { closed: true, count: '불가', sub: '코트 예약이 먼저 있음' };
+  return { closed: false, count: '가능', sub: '선착순 1팀' };
+}
+
+// opts: { selectable, type, size, selected, restCap }
+function renderMap(occ, opts) {
+  const sel = opts.selectable;
+  const pickedVolley = sel && opts.selected === VOLLEY;
+  const tile = (place, tall) => {
+    const st = courtStatus(place, occ);
+    const err = sel ? placeError(place, opts.type, opts.size, occ, opts.restCap) : '';
+    const isSel = sel && opts.selected === place;
+    const asVolley = pickedVolley && BIG_COURTS.includes(place);
+    const on = isSel || asVolley;
+    const tag = sel ? 'button' : 'div';
+    const look = on ? 'is-selected bg-brand text-white'
+      : st.closed ? 'closed bg-card text-mute'
+      : (sel && err ? 'bg-card text-mute opacity-60' : 'bg-card text-ink ' + (sel ? 'hover:shadow-[0_0_0_2px_rgb(var(--brand)/.5)]' : ''));
+    return `<${tag} ${sel ? `type="button" data-place="${place}" aria-pressed="${isSel}" ${err && !asVolley ? 'aria-disabled="true"' : ''}` : ''} class="${sel ? 'press ' : ''}court-lines relative flex ${tall ? 'min-h-[140px] flex-1' : 'min-h-[104px]'} flex-col items-center justify-center gap-0.5 rounded-2xl p-3 text-center ${look}">
+      <span class="relative text-[15px] font-bold">${place}</span>
+      <span class="relative text-[26px] font-extrabold leading-tight tabular-nums ${on ? 'text-white' : st.closed ? 'text-mute' : 'text-brand'}">${asVolley ? '배구' : st.count}</span>
+      <span class="relative text-[12px] font-bold ${on ? 'text-white/90' : st.closed ? 'text-bad' : 'text-sub'}">${asVolley ? '배구로 사용' : st.sub}</span>
+    </${tag}>`;
+  };
+  const side = (place, icon, iconCls, title, desc, st) => {
+    const err = sel ? placeError(place, opts.type, opts.size, occ, opts.restCap) : '';
+    const blocked = sel && (place === VOLLEY ? st.closed : !!err);  // 배구는 구분·인원을 고른 뒤 맞추므로 자리 상태만 봄
+    const isSel = sel && opts.selected === place;
+    const tag = sel ? 'button' : 'div';
+    const look = isSel ? 'border-transparent bg-brand text-white shadow-[0_0_0_3px_rgb(var(--brand)/.3)]'
+      : st.closed ? 'closed border-line bg-card text-mute'
+      : (blocked ? 'border-line bg-card opacity-60' : 'border-line bg-card ' + (sel ? 'hover:border-brand/50' : ''));
+    return `<${tag} ${sel ? `type="button" data-place="${place}" aria-pressed="${isSel}" ${blocked ? 'aria-disabled="true"' : ''}` : ''} class="${sel ? 'press ' : ''}flex w-full items-center gap-3 rounded-2xl border-2 p-4 text-left ${look}">
+      <span class="grid h-11 w-11 shrink-0 place-items-center rounded-full ${isSel ? 'bg-white/20' : iconCls}">${icon}</span>
+      <span class="min-w-0 flex-1">
+        <span class="block text-[16px] font-bold">${title}</span>
+        <span class="block text-[12px] font-medium leading-snug ${isSel ? 'text-white/85' : 'text-sub'}">${desc}</span>
+      </span>
+      <span class="shrink-0 text-right">
+        <span class="block text-[22px] font-extrabold leading-tight tabular-nums ${isSel ? 'text-white' : st.closed ? 'text-bad' : 'text-brand'}">${st.count}</span>
+        <span class="block text-[11px] font-bold ${isSel ? 'text-white/85' : 'text-mute'}">${st.sub}</span>
+      </span>
+    </${tag}>`;
+  };
+  const restIcon = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M17 8h1a3 3 0 0 1 0 6h-1M4 8h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8ZM8 2.5v2.5M12 2.5v2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const ballIcon = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 3c0 5 3 8 8 9M12 12c-4 2-6 5-6 8M12 12c-1-4-4-7-8-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  const volleyOn = occ[VOLLEY].people > 0;
+  return `
+    <div class="grid gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <div class="rounded-[22px] bg-floor p-3 ${pickedVolley ? 'shadow-[0_0_0_3px_rgb(var(--brand))]' : ''}">
+        <p class="flex items-center justify-between px-1 pb-2 text-[13px] font-bold text-sub"><span>대체육관</span>${volleyOn ? '<span class="text-brand">배구 예약 있음</span>' : pickedVolley ? '<span class="text-brand">전체를 배구로 사용</span>' : ''}</p>
+        <div class="mb-2 rounded-xl bg-ink/80 py-2 text-center text-[12px] font-bold tracking-[0.3em] text-card">무대</div>
+        <div class="grid grid-cols-2 gap-2">${tile('코트 1')}${tile('코트 2')}${tile('코트 3')}${tile('코트 4')}</div>
+      </div>
+      <div class="flex flex-col rounded-[22px] bg-floor p-3">
+        <p class="px-1 pb-2 text-[13px] font-bold text-sub">소체육관 <span class="font-medium text-mute">(보조체육관)</span></p>
+        <div class="flex flex-1 flex-col">${tile('코트 5', true)}</div>
+      </div>
+    </div>
+    <div class="mt-3 grid gap-3 sm:grid-cols-2">
+      ${side(REST, restIcon, 'bg-goodsoft text-good', '휴식', '코트 없이 체육관에서 쉬어요', restStatus(occ, opts.restCap))}
+      ${side(VOLLEY, ballIcon, 'bg-brandsoft text-brand', '배구', `대체육관 전체 · ${CONFIG.VOLLEY_MIN}명 이상`, volleyStatus(occ))}
+    </div>`;
+}
+
+/* ============================================================
+   학생: 예약 현황 불러오기 · 날짜 선택
+   state.pub.date / state.pub.occupancy 는 '지금 고른 날짜' 기준
+   ============================================================ */
+const dayInfo = (d) => (state.pub.days || []).find((x) => x.date === d) || null;
+// 'open' 예약 가능 | 'past' 지난 날짜 | 'today' 오늘 | 'closed' 휴관
+function dayState(d) {
+  const x = dayInfo(d);
+  if (!x || d < state.pub.today) return 'past';
+  if (d === state.pub.today) return 'today';
+  if (x.closed) return 'closed';
+  return 'open';
+}
+const FROZEN_LABEL = { past: '지난 날짜예요', today: '오늘은 예약할 수 없어요', closed: '체육관을 열지 않는 날이에요' };
+
+async function loadPublic() {
+  const cached = store.get('gym.public');
+  renderNotices(cached && cached.notices ? normNotices(cached.notices) : normNotices(CONFIG.DEFAULT_NOTICES));
+  try {
+    const data = await api({ action: 'public' });
+    Object.assign(state.pub, {
+      today: data.today,
+      days: data.days || [],
+      nextOpen: data.nextOpen || '',
+      restCapacity: Number(data.restCapacity ?? CONFIG.DEFAULT_REST_CAPACITY),
+      notices: normNotices(data.notices && data.notices.length ? data.notices : (data.notices ? [] : CONFIG.DEFAULT_NOTICES))
+    });
+    store.set('gym.public', { notices: state.pub.notices });
+    renderNotices(state.pub.notices);
+  } catch (err) {
+    toast('예약 현황을 불러오지 못했습니다. ' + err.message, 'error');
+    if (!state.pub.days) { el.reserveTitle.textContent = '불러오지 못했어요'; return; }
+  }
+  // 고른 날짜 유지, 없으면 첫 번째 예약 가능한 날
+  let d = dayInfo(state.pub.date) ? state.pub.date : '';
+  if (!d) {
+    const open = state.pub.days.find((x) => dayState(x.date) === 'open');
+    d = open ? open.date : (state.pub.days.find((x) => x.date >= state.pub.today) || state.pub.days[state.pub.days.length - 1] || {}).date;
+  }
+  if (d) selectDay(d, true);
+}
+
+function selectDay(d, keepPlace) {
+  const changed = d !== state.pub.date;
+  const x = dayInfo(d);
+  state.pub.date = d;
+  state.pub.occupancy = Object.assign(emptyOcc(), (x && x.occupancy) || {});
+  state.pub.bookable = dayState(d) === 'open';
+  if (!keepPlace || !state.pub.bookable) state.place = null;
+  lockSteps(!state.pub.bookable);
+  if (changed) state.members.forEach((m, i) => { if (m.id) { m.ban = ''; checkBan(i); } }); // 이용 제한은 날짜마다 다름
+  fitMembers(); renderDates(); renderType(); renderMembers();
+}
+// 예약할 수 없는 날짜면 2~6단계 입력을 모두 막고 카메라도 끔
+function lockSteps(locked) {
+  el.reserveSteps.disabled = locked;
+  if (locked) stopCamera();
+  else if (state.camOn && !state.photo) startCamera();
+}
+el.dateChips.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-date]'); if (!b || b.dataset.date === state.pub.date) return;
+  selectDay(b.dataset.date, false);
+});
+
+function renderDates() {
+  const days = state.pub.days || [];
+  const sel = state.pub.date;
+  el.reserveTitle.textContent = sel ? fmtDate(sel) : '불러오는 중';
+  el.openRule.textContent = `매주 ${WD[CONFIG.OPEN_WEEKDAY]}요일 ${openHourLabel()}에 다음 주(월~금) 예약이 열려요. 당일 예약은 안 돼요.`;
+  el.dateChips.innerHTML = days.map((x) => {
+    const st = dayState(x.date);
+    const on = x.date === sel;
+    const people = Object.values(x.occupancy || {}).reduce((n, o) => n + (o.people || 0), 0);
+    const label = st === 'open' ? (people ? `${people}명` : '예약 가능') : st === 'today' ? '오늘' : st === 'closed' ? '휴관' : '지남';
+    const look = on ? (st === 'open' ? 'bg-brand text-white' : 'bg-sub text-white')
+      : st === 'open' ? 'bg-card text-ink shadow-[inset_0_0_0_2px_rgb(var(--line))] hover:shadow-[inset_0_0_0_2px_rgb(var(--brand)/.5)]'
+      : st === 'closed' ? 'closed bg-field text-mute' : 'bg-field text-mute';
+    return `<button type="button" data-date="${x.date}" aria-pressed="${on}" class="press flex flex-col items-center gap-0.5 rounded-2xl py-2.5 ${look}">
+      <span class="text-[12px] font-semibold ${on ? 'text-white/80' : ''}">${WD[dow(x.date)]}</span>
+      <span class="text-[18px] font-bold leading-tight">${Number(x.date.slice(5, 7))}/${Number(x.date.slice(8))}</span>
+      <span class="text-[11px] font-bold ${on ? 'text-white/90' : st === 'closed' ? 'text-bad' : st === 'open' ? 'text-brand' : ''}">${label}</span>
+    </button>`;
+  }).join('');
+
+  const st = sel ? dayState(sel) : 'past';
+  const anyOpen = days.some((x) => dayState(x.date) === 'open');
+  const parts = [];
+  let tone = 'bg-field text-sub';
+  if (st === 'closed') {
+    const memo = (dayInfo(sel) || {}).closedMemo;
+    parts.push(`이 날은 체육관을 열지 않아요${memo ? ` (${esc(memo)})` : ''}.`);
+    tone = 'bg-badsoft text-bad';
+  } else if (st === 'past') parts.push('지난 날짜예요. 예약할 수 없어요.');
+  else if (st === 'today') parts.push('오늘은 예약할 수 없어요. 예약은 이용 전날까지 받아요.');
+  if (!anyOpen && state.pub.nextOpen) {
+    parts.push(`다음 주 예약은 <b>${esc(state.pub.nextOpen)}</b>에 열려요.`);
+    if (st !== 'closed') tone = 'bg-brandsoft text-brand';
+  }
+  el.dateNote.innerHTML = parts.map((t) => `<span class="block">${t}</span>`).join('');
+  el.dateNote.className = parts.length ? `mt-2.5 rounded-2xl px-4 py-3 text-[14px] font-semibold leading-relaxed ${tone}` : 'hidden';
+}
+
+/* ============================================================
+   학생: 예약 폼
+   ============================================================ */
+const visibleMembers = () => state.type === 'single' ? state.members.slice(0, 1) : state.members;
+const typeKo = () => (state.type === 'group' ? '단체' : '개인');
+const blankMember = () => ({ id: '', name: '', ban: '' });
+function memberLimits(place = state.place) {
+  if (state.type === 'single') return { min: 1, max: 1 };
+  return place === VOLLEY ? { min: CONFIG.VOLLEY_MIN, max: CONFIG.VOLLEY_MAX } : { min: 2, max: CONFIG.MAX_GROUP };
+}
+// 구분·장소가 바뀌면 학생 칸 수를 규칙에 맞춤 (입력한 값은 앞에서부터 유지)
+function fitMembers() {
+  if (state.type === 'single') return;
+  const { min, max } = memberLimits();
+  while (state.members.length < min) state.members.push(blankMember());
+  if (state.members.length > max) state.members = state.members.slice(0, max);
+}
+
+function renderType() {
+  paintChoice(el.reserveForm.querySelectorAll('[data-type]'), (b) => b.dataset.type === state.type,
+    'press h-12 rounded-[14px] text-[15px] font-bold', 'bg-card text-ink shadow-sm', 'text-mute');
+  el.typeNote.innerHTML = infoIcon(18) + (state.place === VOLLEY
+    ? `<span>배구는 대체육관 전체(코트 1~4)를 사용해요. ${CONFIG.VOLLEY_MIN}~${CONFIG.VOLLEY_MAX}명이 함께 예약해야 하고, 대체육관 코트에 먼저 들어온 예약이 하나라도 있으면 예약할 수 없어요.</span>`
+    : state.type === 'single'
+      ? '<span>개인으로 예약하면 다른 학생과 코트를 함께 사용할 수 있어요. 코트 하나에 최대 4명까지 들어갑니다.</span>'
+      : '<span>단체(2~4명)로 예약하면 그 코트를 우리 팀만 사용해요. 아무도 예약하지 않은 빈 코트만 고를 수 있어요. 배구(10명 이상)는 아래 배구 버튼을 누르세요.</span>');
+  el.photoTitle.querySelector('span:last-child').textContent = state.type === 'group' ? '대표 학생 얼굴 촬영' : '얼굴 촬영';
+}
+
+function renderPlaces() {
+  if (!state.pub.occupancy) { el.placeMap.innerHTML = '<p class="py-8 text-center text-[14px] text-mute">불러오는 중...</p>'; return; }
+  if (!state.pub.bookable) {
+    // 지난 날짜·오늘·휴관일: 모든 코트를 회색으로
+    el.placeMap.innerHTML = frozenMap(renderMap(state.pub.occupancy, { selectable: false, restCap: state.pub.restCapacity }), FROZEN_LABEL[dayState(state.pub.date)]);
+    return;
+  }
+  el.placeMap.innerHTML = renderMap(state.pub.occupancy, { selectable: true, type: typeKo(), size: visibleMembers().length, selected: state.place, restCap: state.pub.restCapacity });
+}
+el.placeMap.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-place]'); if (!b) return;
+  let place = b.dataset.place;
+  const occ = state.pub.occupancy;
+  // 배구를 고른 상태에서 대체육관 코트를 누르면 배구 선택으로 취급
+  if (state.place === VOLLEY && BIG_COURTS.includes(place)) place = VOLLEY;
+  if (state.place === place) { state.place = null; fitMembers(); renderType(); renderMembers(); return; }
+  if (place === VOLLEY) {
+    if (volleyStatus(occ).closed) { toast(placeError(VOLLEY, '단체', CONFIG.VOLLEY_MIN, occ, state.pub.restCapacity), 'error'); return; }
+    state.type = 'group';
+  } else {
+    const n = state.type === 'single' ? 1 : Math.min(Math.max(state.members.length, 2), CONFIG.MAX_GROUP);
+    const err = placeError(place, typeKo(), n, occ, state.pub.restCapacity);
+    if (err) { toast(err, 'error'); return; }
+  }
+  state.place = place;
+  fitMembers(); renderType(); renderMembers();
+});
+
+function memberRowHtml(m, i) {
+  const { min } = memberLimits();
+  const label = state.type === 'single' ? '예약 학생' : (i === 0 ? '대표 학생' : `학생 ${i + 1}`);
+  return `
+    <div class="member-row rounded-2xl bg-field p-3 sm:p-4" data-i="${i}">
+      <div class="flex h-7 items-center justify-between">
+        <span class="text-[13px] font-bold text-sub">${label}</span>
+        ${state.type === 'group' && i >= min ? `<button type="button" data-remove="${i}" class="press -mr-1 grid h-8 w-8 place-items-center rounded-full text-mute hover:text-bad" aria-label="학생 ${i + 1} 삭제"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>` : ''}
+      </div>
+      <div class="mt-1.5 grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-2">
+        <input data-f="id" type="text" inputmode="numeric" maxlength="5" placeholder="학번 (예: 30215)" aria-label="학생 ${i + 1} 학번" value="${esc(m.id)}" class="field !mt-0 !bg-card tracking-wide ${m.ban ? 'is-invalid' : ''}">
+        <input data-f="name" type="text" maxlength="20" placeholder="이름" aria-label="학생 ${i + 1} 이름" value="${esc(m.name)}" class="field !mt-0 !bg-card ${m.ban ? 'is-invalid' : ''}">
+      </div>
+      <p class="ban-msg ${m.ban ? 'flex' : 'hidden'} mt-2 items-start gap-1.5 text-[14px] font-bold leading-snug text-bad" role="alert">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="mt-px shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="2"/><path d="M5.5 5.5l13 13" stroke="currentColor" stroke-width="2"/></svg>
+        <span>${esc(m.ban)}</span>
+      </p>
+    </div>`;
+}
+
+function renderMembers() {
+  el.memberRows.innerHTML = visibleMembers().map(memberRowHtml).join('');
+  const group = state.type === 'group';
+  const { max } = memberLimits();
+  el.btnAddMember.classList.toggle('hidden', !group);
+  el.btnAddMember.classList.toggle('flex', group);
+  el.btnAddMember.disabled = state.members.length >= max;
+  el.btnAddMember.querySelector('span').textContent = `학생 추가 (${state.members.length}/${max})`;
+  renderPlaces();
+  updateReserve();
+}
+
+function setBanMsg(i) {
+  const row = el.memberRows.querySelector(`.member-row[data-i="${i}"]`); if (!row) return;
+  const m = state.members[i];
+  const p = row.querySelector('.ban-msg');
+  p.querySelector('span').textContent = m.ban || '';
+  p.classList.toggle('hidden', !m.ban); p.classList.toggle('flex', !!m.ban);
+  row.querySelectorAll('input').forEach((inp) => inp.classList.toggle('is-invalid', !!m.ban));
+}
+
+// 이용 제한 확인 (학번 5자리가 되면 바로)
+const banCache = new Map();
+const banTimers = {};
+function checkBan(i) {
+  const m = state.members[i];
+  clearTimeout(banTimers[i]);
+  if (!/^\d{5}$/.test(m.id)) { if (m.ban) { m.ban = ''; setBanMsg(i); updateReserve(); } return; }
+  const id = m.id, date = state.pub.date, ck = `${id}|${date}`;
+  if (banCache.has(ck)) { m.ban = banCache.get(ck); setBanMsg(i); updateReserve(); return; }
+  banTimers[i] = setTimeout(async () => {
+    try {
+      const r = await api({ action: 'checkBan', studentId: id, date });
+      banCache.set(ck, r.banned ? r.message : '');
+      if (state.members[i] && state.members[i].id === id && state.pub.date === date) { state.members[i].ban = banCache.get(ck); setBanMsg(i); updateReserve(); }
+    } catch { /* 확인 실패 시 서버가 예약 때 다시 검사 */ }
+  }, 250);
+}
+
+function updateReserve() {
+  const list = visibleMembers();
+  const ids = list.map((m) => m.id.trim());
+  const dupIds = ids.filter((id, i) => id && ids.indexOf(id) !== i);
+  el.memberRows.querySelectorAll('.member-row').forEach((row, i) => {
+    const m = list[i];
+    if (m && !m.ban) row.querySelector('[data-f="id"]').classList.toggle('is-invalid', m.id.length === 5 && dupIds.includes(m.id));
+  });
+  const filledCount = list.filter((m) => /^\d{5}$/.test(m.id.trim()) && m.name.trim()).length;
+  const filled = filledCount === list.length;
+  const banned = list.find((m) => m.ban);
+  const placeErr = state.place ? placeError(state.place, typeKo(), list.length, state.pub.occupancy, state.pub.restCapacity) : '';
+  const agreed = el.agreePenalty.checked && el.agreePrivacy.checked;
+  let hint = '', bad = false;
+  if (!state.pub.date || !state.pub.occupancy) hint = '예약 현황을 불러오는 중입니다.';
+  else if (!state.pub.bookable) hint = '예약할 수 있는 날짜를 고르세요.';
+  else if (!state.place) hint = '사용할 코트나 휴식·배구를 선택하세요.';
+  else if (placeErr) { hint = placeErr; bad = true; }
+  else if (dupIds.length) { hint = `학번 ${dupIds[0]}이(가) 두 번 입력되었습니다.`; bad = true; }
+  else if (banned) { hint = `${banned.id} 학생은 체육관을 이용할 수 없어 예약할 수 없습니다.`; bad = true; }
+  else if (!filled) hint = state.type === 'group' ? `모든 학생의 학번 5자리와 이름을 입력하세요. (${filledCount}/${list.length}명 입력)` : '학번 5자리와 이름을 입력하세요.';
+  else if (!state.photo) hint = state.type === 'group' ? '대표 학생 얼굴을 촬영하세요.' : '얼굴을 촬영하세요.';
+  else if (!agreed) hint = '동의 항목 2개에 모두 체크하세요.';
+  el.reserveHint.textContent = hint;
+  el.reserveHint.className = 'mt-5 min-h-5 text-[13px] font-semibold ' + (bad ? 'text-bad' : 'text-mute');
+  el.btnReserve.disabled = !!hint;
+  el.btnReserve.textContent = state.place && state.pub.date
+    ? `${fmtDate(state.pub.date, false)} ${state.place} ${state.type === 'group' ? `${list.length}명 ` : ''}예약하기`
+    : '예약하기';
+}
+
+el.reserveForm.querySelectorAll('[data-type]').forEach((b) => b.addEventListener('click', () => {
+  if (state.type === b.dataset.type) return;
+  state.type = b.dataset.type;
+  if (state.type === 'single' && state.place === VOLLEY) state.place = null;
+  fitMembers();
+  renderType(); renderMembers();
+}));
+
+el.memberRows.addEventListener('input', (e) => {
+  const row = e.target.closest('.member-row'); if (!row) return;
+  const i = Number(row.dataset.i), f = e.target.dataset.f;
+  if (f === 'id') e.target.value = e.target.value.replace(/\D/g, '').slice(0, 5);
+  state.members[i][f] = e.target.value;
+  if (f === 'id') checkBan(i);
+  updateReserve();
+});
+el.memberRows.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-remove]'); if (!b) return;
+  state.members.splice(Number(b.dataset.remove), 1);
+  renderMembers();
+});
+el.btnAddMember.addEventListener('click', () => {
+  if (state.members.length >= memberLimits().max) return;
+  state.members.push(blankMember());
+  renderMembers();
+  el.memberRows.lastElementChild.querySelector('[data-f="id"]').focus();
+});
+el.agreePenalty.addEventListener('change', updateReserve);
+el.agreePrivacy.addEventListener('change', updateReserve);
+
+el.reserveForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (el.btnReserve.disabled) return;
+  const type = typeKo();
+  let members;
+  try { members = validateMembers(type, visibleMembers(), state.place); } catch (err) { toast(err.message, 'error'); return; }
+  el.btnReserve.disabled = true;
+  await task('예약하는 중입니다...', async () => {
+    const data = await api({
+      action: 'reserve', date: state.pub.date, place: state.place, type, members,
+      photo: state.photo, thumb: state.thumb, agreePenalty: el.agreePenalty.checked, agreePrivacy: el.agreePrivacy.checked
+    });
+    showDone(data.reservation, state.thumb);
+    resetReserveForm();
+  }, (msg) => { toast(msg, 'error'); banCache.clear(); });
+  loadPublic();
+});
+
+function resetReserveForm() {
+  state.type = 'single'; state.place = null;
+  state.members = [blankMember(), blankMember()];
+  el.agreePenalty.checked = false; el.agreePrivacy.checked = false;
+  renderType(); renderMembers();
+  resetPhoto();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showDone(r, thumb) {
+  el.donePlace.textContent = placeLabel(r.place);
+  el.doneDate.textContent = `${fmtDate(r.date)} 점심시간 · ${r.type} ${r.members.length}명`;
+  el.doneCode.textContent = r.code;
+  el.doneCount.textContent = `예약한 학생 ${r.members.length}명 보기`;
+  el.doneMembers.innerHTML = (thumb ? `<li class="mb-2 flex justify-center"><img src="${thumb}" alt="" class="h-20 w-20 rounded-2xl object-cover"></li>` : '')
+    + r.members.map((m, i) => `<li class="flex justify-between gap-3"><span class="text-sub">${esc(m.id)}</span><span>${esc(m.name)}${i === 0 && r.members.length > 1 ? ' <span class="text-[12px] text-brand">대표</span>' : ''}</span></li>`).join('');
+  show(el.doneModal);
+  el.btnDoneClose.focus();
+}
+el.btnDoneClose.addEventListener('click', () => hide(el.doneModal));
+
+/* ============================================================
+   카메라 (대표 학생 얼굴)
+   권한 창은 사용자가 버튼을 누른 순간에 요청해야 모든 브라우저에서 확실히 뜹니다.
+   실시간 카메라가 막힌 환경에서는 '기기 카메라 앱으로 찍기'를 씁니다.
+   ============================================================ */
+function setCamStatus(text, live = false) {
+  el.camStatus.innerHTML = (live ? '<span class="live-dot"></span>' : '') + '<span></span>';
+  el.camStatus.querySelector('span:last-child').textContent = text;
+}
+function guide(on) { el.faceGuide.classList.toggle('hidden', !on); el.faceGuide.classList.toggle('grid', on); }
+function showCamStart() { hide(el.camError); show(el.camStart); guide(false); el.btnCapture.disabled = true; syncCaptureBtn(); setCamStatus('카메라 꺼짐'); }
+function showCamError(msg) { hide(el.camStart); el.camErrorMsg.textContent = msg; show(el.camError); guide(false); el.btnCapture.disabled = true; syncCaptureBtn(); setCamStatus('카메라 꺼짐'); }
+// 구글 안에서는 실시간 카메라가 막혀 있는 경우가 많아 '카메라 앱으로 찍기'가 기본.
+// 그래서 실시간 화면이 켜졌을 때만 [사진 촬영] 버튼을 보여 줌
+function syncCaptureBtn() {
+  if (state.photo) return;
+  const hideIt = IN_GAS && !state.stream;
+  el.btnCapture.classList.toggle('hidden', hideIt);
+  el.btnCapture.classList.toggle('flex', !hideIt);
+}
+
+function cameraBlockReason() {
+  if (!window.isSecureContext) return '카메라는 https:// 주소에서만 켜집니다. 배포한 주소(https://…)로 접속하거나, 아래 버튼으로 촬영하세요.';
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (/KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\//i.test(navigator.userAgent)) return '앱 안의 브라우저에서는 실시간 카메라가 막혀 있습니다. 크롬이나 사파리로 열거나, 아래 버튼으로 촬영하세요.';
+    return '이 브라우저는 실시간 카메라를 지원하지 않습니다. 크롬이나 사파리로 열거나, 아래 버튼으로 촬영하세요.';
+  }
+  return '';
+}
+async function getStream() {
+  const tries = [
+    { video: { facingMode: 'user', width: { ideal: 960 }, height: { ideal: 960 } }, audio: false },
+    { video: { facingMode: 'user' }, audio: false },
+    { video: true, audio: false }
+  ];
+  let last;
+  for (const c of tries) {
+    try { return await navigator.mediaDevices.getUserMedia(c); }
+    catch (err) { last = err; if (err.name === 'NotAllowedError' || err.name === 'SecurityError') throw err; }
+  }
+  throw last;
+}
+async function startCamera() {
+  if (state.stream || state.photo || state.view !== 'student' || el.reserveSteps.disabled) return;
+  const blocked = cameraBlockReason();
+  if (blocked) { showCamError(blocked); return; }
+  hide(el.camError); hide(el.camStart);
+  setCamStatus('카메라 연결 중');
+  try {
+    const stream = await getStream();
+    if (state.view !== 'student' || state.photo) { stream.getTracks().forEach((t) => t.stop()); return; }
+    state.camOn = true; state.stream = stream;
+    el.video.srcObject = stream;
+    await el.video.play().catch(() => {});
+    guide(true);
+    el.btnCapture.disabled = false;
+    syncCaptureBtn();
+    setCamStatus('촬영 준비 완료', true);
+  } catch (err) {
+    const inFrame = (() => { try { return window.self !== window.top; } catch { return true; } })();
+    const msg = (err.name === 'NotAllowedError' || err.name === 'SecurityError') && inFrame
+      ? (IN_GAS ? '이 화면에서는 실시간 카메라를 쓸 수 없어요. 아래 버튼으로 휴대폰 카메라를 열어 찍어 주세요.' : '미리보기 화면에서는 카메라 권한 창이 뜨지 않습니다. 배포한 주소로 열거나, 아래 버튼으로 촬영하세요.')
+      : ({
+        NotAllowedError: '카메라 권한이 꺼져 있습니다. 주소창 왼쪽 아이콘 → 권한(사이트 설정) → 카메라 허용 후 다시 연결하세요.',
+        SecurityError: '보안 설정 때문에 카메라를 켤 수 없습니다. https:// 주소로 접속하세요.',
+        NotFoundError: '연결된 카메라를 찾지 못했습니다.',
+        NotReadableError: '다른 앱이 카메라를 사용 중입니다. 다른 앱을 닫고 다시 연결하세요.'
+      }[err.name] || `카메라를 시작하지 못했습니다. (${err.name || err.message})`);
+    showCamError(msg);
+  }
+}
+function stopCamera() {
+  if (state.stream) state.stream.getTracks().forEach((t) => t.stop());
+  state.stream = null;
+  el.video.srcObject = null;
+}
+// 가운데를 정사각형으로 잘라 JPEG로
+function squareJpeg(source, sw, sh, mirror, S, q) {
+  const size = Math.min(sw, sh), ctx = el.captureCanvas.getContext('2d');
+  el.captureCanvas.width = S; el.captureCanvas.height = S;
+  ctx.save();
+  if (mirror) { ctx.translate(S, 0); ctx.scale(-1, 1); }
+  ctx.drawImage(source, (sw - size) / 2, (sh - size) / 2, size, size, 0, 0, S, S);
+  ctx.restore();
+  return el.captureCanvas.toDataURL('image/jpeg', q);
+}
+function setPhoto(source, sw, sh, mirror) {
+  const full = squareJpeg(source, sw, sh, mirror, 480, 0.8);    // 드라이브 저장용
+  state.thumb = squareJpeg(source, sw, sh, mirror, 200, 0.72);  // 관리자 화면 확인용 (시트에 함께 저장)
+  state.photo = isConnected() ? full : state.thumb;             // 데모는 브라우저 저장 공간 절약
+  el.snapshot.src = full;
+  el.snapshot.classList.remove('hidden');
+  guide(false); hide(el.camStart); hide(el.camError); show(el.photoBadge);
+  el.flashLayer.classList.remove('flash'); void el.flashLayer.offsetWidth; el.flashLayer.classList.add('flash');
+  stopCamera();
+  setCamStatus('사진 준비됨');
+  el.btnCapture.classList.add('hidden'); el.btnCapture.classList.remove('flex');
+  el.btnRetake.classList.remove('hidden');
+  updateReserve();
+}
+function capturePhoto() {
+  const v = el.video;
+  if (!v.videoWidth) { toast('카메라 화면이 아직 준비되지 않았습니다.', 'error'); return; }
+  setPhoto(v, v.videoWidth, v.videoHeight, true); // 화면에 보이던 거울 모드 그대로
+}
+el.nativeCam.addEventListener('change', () => {
+  const file = el.nativeCam.files && el.nativeCam.files[0];
+  el.nativeCam.value = '';
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { toast('사진 파일만 사용할 수 있습니다.', 'error'); return; }
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => { setPhoto(img, img.naturalWidth, img.naturalHeight, false); URL.revokeObjectURL(url); };
+  img.onerror = () => { URL.revokeObjectURL(url); toast('사진을 읽지 못했습니다. 다시 찍어 주세요.', 'error'); };
+  img.src = url;
+});
+document.querySelectorAll('[data-native-cam]').forEach((b) => b.addEventListener('click', () => openCameraApp()));
+
+function resetPhoto() {
+  state.photo = null; state.thumb = null;
+  el.snapshot.classList.add('hidden'); el.snapshot.removeAttribute('src');
+  hide(el.photoBadge);
+  el.btnRetake.classList.add('hidden');
+  el.btnCapture.classList.remove('hidden'); el.btnCapture.classList.add('flex');
+  el.btnCapture.disabled = true;
+  updateReserve();
+  if (state.camOn) startCamera(); else showCamStart();
+}
+const openCameraApp = () => el.nativeCam.click();
+el.btnCamStart.addEventListener('click', () => (IN_GAS ? openCameraApp() : startCamera()));
+el.btnCamAlt.addEventListener('click', () => (IN_GAS ? startCamera() : openCameraApp()));
+el.btnCamRetry.addEventListener('click', startCamera);
+el.btnCapture.addEventListener('click', capturePhoto);
+el.btnRetake.addEventListener('click', resetPhoto);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) stopCamera();
+  else if (state.camOn && state.view === 'student') startCamera();
+});
+
+/* ============================================================
+   학생: 내 예약 확인 (학번 + 이름 + 예약번호) · 취소 · 단체 인원 수정
+   ============================================================ */
+const lk = { list: [], cred: null, edit: -1, draft: [], today: '' };
+el.lookupId.addEventListener('input', () => { el.lookupId.value = el.lookupId.value.replace(/\D/g, '').slice(0, 5); });
+el.lookupCode.addEventListener('input', () => { el.lookupCode.value = el.lookupCode.value.replace(/\D/g, '').slice(0, 3); });
+
+function lookupMessage(text, bad) {
+  el.lookupResult.innerHTML = `<p class="rounded-2xl ${bad ? 'bg-badsoft text-bad' : 'bg-field text-sub'} px-4 py-4 text-center text-[14px] font-semibold">${esc(text)}</p>`;
+}
+
+el.lookupForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const studentId = el.lookupId.value.trim(), name = el.lookupName.value.trim(), code = el.lookupCode.value.trim();
+  if (!/^\d{5}$/.test(studentId) || !name) { toast('학번 5자리와 이름을 입력하세요.', 'error'); return; }
+  if (!/^\d{1,3}$/.test(code)) { toast('예약번호를 입력하세요.', 'error'); el.lookupCode.focus(); return; }
+  await task('조회 중입니다...', async () => {
+    const data = await api({ action: 'lookup', studentId, name, code });
+    lk.cred = { studentId, name, code };
+    lk.list = data.reservations || []; lk.edit = -1; lk.today = data.today || seoulNow().date;
+    renderLookup();
+  }, (msg) => { lk.cred = null; lk.list = []; lookupMessage(msg, true); });
+});
+
+const limitsFor = (r) => (r.place === VOLLEY ? { min: CONFIG.VOLLEY_MIN, max: CONFIG.VOLLEY_MAX } : { min: 2, max: CONFIG.MAX_GROUP });
+
+function renderLookup() {
+  if (!lk.list.length) { lookupMessage('조회된 예약이 없습니다.'); return; }
+  el.lookupResult.innerHTML = lk.list.map((r, i) => {
+    const editing = lk.edit === i;
+    const head = `
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="text-[16px] font-bold">${fmtDate(r.date)} · ${esc(placeLabel(r.place))}</p>
+          <p class="mt-0.5 text-[13px] text-sub">${esc(r.type)} ${r.members.length}명</p>
+        </div>
+        <span class="shrink-0 rounded-xl bg-card px-2.5 py-1 text-[13px] font-bold text-brand">예약번호 ${esc(r.code)}</span>
+      </div>`;
+    if (!editing) {
+      const active = r.status === '예약';
+      const canChange = active && r.date >= lk.today;
+      const badge = canChange ? ['예약됨', 'bg-goodsoft text-good']
+        : active ? ['이용일 지남', 'bg-card text-sub']
+        : r.status === '취소' ? ['내가 취소함', 'bg-card text-sub']
+        : r.status === '이용 제한 취소' ? ['이용 제한으로 취소됨', 'bg-badsoft text-bad']
+        : ['관리자가 취소함', 'bg-badsoft text-bad'];
+      return `<div class="rounded-2xl bg-field p-4 ${active ? '' : 'opacity-95'}" data-li="${i}">${head}
+        <p class="mt-2"><span class="rounded-lg px-2 py-1 text-[13px] font-bold ${badge[1]}">${badge[0]}</span>${!active && r.updatedAt ? `<span class="ml-2 text-[12px] text-mute">${esc(fmtStamp(r.updatedAt))}</span>` : ''}</p>
+        ${r.reason ? `<p class="mt-2 rounded-xl bg-card px-3 py-2.5 text-[14px] font-semibold leading-relaxed text-bad">취소 사유: ${esc(r.reason)}</p>` : ''}
+        <p class="mt-2 text-[14px] font-semibold leading-relaxed ${active ? '' : 'text-sub'}">${r.members.map((m) => `${esc(m.id)} ${esc(m.name)}`).join(' · ')}</p>
+        ${canChange ? `<div class="mt-3 grid ${r.type === '단체' ? 'grid-cols-2' : 'grid-cols-1'} gap-2">
+          ${r.type === '단체' ? '<button type="button" data-act="edit" class="press h-11 rounded-xl bg-card text-[14px] font-bold text-ink">인원 수정</button>' : ''}
+          <button type="button" data-act="cancel" class="press h-11 rounded-xl bg-card text-[14px] font-bold text-bad">예약 취소</button>
+        </div>` : ''}
+      </div>`;
+    }
+    const lim = limitsFor(r);
+    const rows = lk.draft.map((m, j) => j === 0
+      ? `<div class="rounded-xl bg-card px-3 py-2.5"><p class="text-[12px] font-bold text-sub">대표 학생 · 바꿀 수 없음</p><p class="mt-0.5 text-[15px] font-semibold">${esc(m.id)} ${esc(m.name)}</p></div>`
+      : `<div class="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)_48px] items-center gap-2">
+          <input data-ei="${j}" data-f="id" type="text" inputmode="numeric" maxlength="5" placeholder="학번" aria-label="학생 ${j + 1} 학번" value="${esc(m.id)}" class="field !mt-0 !h-12 !bg-card">
+          <input data-ei="${j}" data-f="name" type="text" maxlength="20" placeholder="이름" aria-label="학생 ${j + 1} 이름" value="${esc(m.name)}" class="field !mt-0 !h-12 !bg-card">
+          ${j >= lim.min ? `<button type="button" data-act="remove" data-ei="${j}" class="press grid h-12 w-12 place-items-center rounded-xl bg-card text-mute hover:text-bad" aria-label="학생 ${j + 1} 빼기"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>` : '<span></span>'}
+        </div>`).join('');
+    return `<div class="rounded-2xl bg-field p-4 shadow-[0_0_0_2px_rgb(var(--brand))]" data-li="${i}">${head}
+      <p class="mt-3 text-[13px] font-semibold text-sub">${lim.min}~${lim.max}명까지 바꿀 수 있어요. 대표 학생을 바꾸려면 취소 후 다시 예약하세요.</p>
+      <div class="mt-2 space-y-2">${rows}</div>
+      ${lk.draft.length < lim.max ? `<button type="button" data-act="add" class="press mt-2 h-11 w-full rounded-xl border-2 border-dashed border-line text-[14px] font-bold text-brand">학생 추가 (${lk.draft.length}/${lim.max})</button>` : ''}
+      <div class="mt-3 grid grid-cols-2 gap-2">
+        <button type="button" data-act="edit-close" class="press h-12 rounded-xl bg-card text-[15px] font-bold text-sub">그만두기</button>
+        <button type="button" data-act="save" class="press h-12 rounded-xl bg-brand text-[15px] font-bold text-white">${lk.draft.length}명으로 저장</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+el.lookupResult.addEventListener('input', (e) => {
+  const inp = e.target.closest('[data-ei]'); if (!inp) return;
+  const j = Number(inp.dataset.ei);
+  if (inp.dataset.f === 'id') inp.value = inp.value.replace(/\D/g, '').slice(0, 5);
+  lk.draft[j][inp.dataset.f] = inp.value;
+});
+
+el.lookupResult.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const card = b.closest('[data-li]'); const i = Number(card.dataset.li); const r = lk.list[i];
+  const auth = { key: r.key, code: lk.cred.code, studentId: lk.cred.studentId, name: lk.cred.name };
+  switch (b.dataset.act) {
+    case 'edit': lk.edit = i; lk.draft = r.members.map((m) => ({ ...m })); renderLookup(); break;
+    case 'edit-close': lk.edit = -1; renderLookup(); break;
+    case 'add':
+      lk.draft.push({ id: '', name: '' }); renderLookup();
+      el.lookupResult.querySelector(`[data-ei="${lk.draft.length - 1}"][data-f="id"]`)?.focus();
+      break;
+    case 'remove': lk.draft.splice(Number(b.dataset.ei), 1); renderLookup(); break;
+    case 'save': {
+      let members;
+      try { members = validateMembers('단체', lk.draft, r.place); } catch (err) { toast(err.message, 'error'); return; }
+      task(undefined, async () => {
+        const res = await api({ action: 'updateMembers', ...auth, members });
+        lk.edit = -1;
+        if (!res.members.some((m) => m.id === lk.cred.studentId && m.name === lk.cred.name)) {
+          lk.list.splice(i, 1);
+          toast('인원을 수정했습니다. 본인을 명단에서 빼서 이 예약은 더 이상 볼 수 없습니다.');
+        } else {
+          r.members = res.members;
+          toast(`${res.members.length}명으로 수정했습니다.`);
+        }
+        renderLookup();
+        loadPublic();
+      });
+      break;
+    }
+    case 'cancel':
+      armButton(b, '한 번 더 누르면 취소', () => task('취소하는 중입니다...', async () => {
+        await api({ action: 'cancel', ...auth });
+        Object.assign(r, { status: '취소', reason: '', updatedAt: seoulNow().stamp }); lk.edit = -1;
+        toast('예약을 취소했습니다.');
+        renderLookup();
+        loadPublic();
+      }));
+      break;
+  }
+});
+
+/* ============================================================
+   관리자 로그인 / 잠금
+   ============================================================ */
+const LOCK_ICON = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4.5" y="10" width="15" height="10" rx="2.5" stroke="currentColor" stroke-width="2"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10" stroke="currentColor" stroke-width="2"/></svg>';
+const UNLOCK_ICON = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4.5" y="10" width="15" height="10" rx="2.5" stroke="currentColor" stroke-width="2"/><path d="M8 10V7.5a4 4 0 0 1 7.6-1.7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+
+function renderLockButton() {
+  const admin = state.view === 'admin';
+  el.btnLock.innerHTML = admin ? UNLOCK_ICON : LOCK_ICON;
+  el.btnLock.setAttribute('aria-label', admin ? '관리자 화면 잠그기' : '관리자 페이지 열기');
+  el.btnLock.title = admin ? '잠그고 나가기' : '관리자';
+  el.btnLock.className = 'press grid h-11 w-11 place-items-center rounded-full shadow-sm ' + (admin ? 'bg-brand text-white' : 'bg-card text-sub hover:text-brand');
+}
+function openPw() { el.pwInput.value = ''; el.pwError.textContent = ''; show(el.pwModal); setTimeout(() => el.pwInput.focus(), 50); }
+function closePw() { hide(el.pwModal); }
+// 비밀번호는 서버(Code.gs)에서 확인 — 화면 코드에는 비밀번호가 없음
+el.pwForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const pw = el.pwInput.value;
+  if (!pw) { el.pwInput.focus(); return; }
+  let passed = false;
+  await task('확인 중입니다...', async () => { await api({ action: 'login', password: pw }); passed = true; }, (msg) => {
+    el.pwError.textContent = /비밀번호/.test(msg) ? '비밀번호가 일치하지 않습니다.' : msg;
+    el.pwForm.classList.remove('shake'); void el.pwForm.offsetWidth; el.pwForm.classList.add('shake');
+    el.pwInput.select();
+  });
+  if (passed) { closePw(); enterAdmin(pw); }
+});
+el.pwModal.querySelector('[data-close]').addEventListener('click', closePw);
+el.btnLock.addEventListener('click', () => { state.view === 'admin' ? exitAdmin() : openPw(); });
+
+function enterAdmin(pw) {
+  state.view = 'admin';
+  state.admin.pw = pw;
+  stopCamera();
+  const today = seoulNow().date;
+  state.admin.date = isWeekend(today) ? nextSchoolDay(today) : today;
+  el.viewStudent.classList.add('hidden');
+  el.viewAdmin.classList.remove('hidden');
+  el.pageTitle.textContent = '관리자';
+  renderLockButton();
+  setAdminTab('res');
+  loadAdmin();
+  bumpIdle();
+  window.scrollTo({ top: 0 });
+}
+function exitAdmin(msg) {
+  state.view = 'student';
+  state.admin.pw = null; state.admin.data = null;
+  clearTimeout(state.admin.idleTimer);
+  el.viewAdmin.classList.add('hidden');
+  el.viewStudent.classList.remove('hidden');
+  el.pageTitle.textContent = '체육관 예약';
+  renderLockButton();
+  banCache.clear();
+  state.members.forEach((m, i) => { m.ban = ''; if (m.id) checkBan(i); });
+  renderMembers();
+  loadPublic();
+  if (state.camOn && !state.photo) startCamera();
+  window.scrollTo({ top: 0 });
+  if (msg) toast(msg);
+}
+function bumpIdle() {
+  if (state.view !== 'admin') return;
+  clearTimeout(state.admin.idleTimer);
+  state.admin.idleTimer = setTimeout(() => exitAdmin('오래 사용하지 않아 관리자 화면을 잠갔습니다.'), CONFIG.ADMIN_IDLE_MINUTES * 60 * 1000);
+}
+['pointerdown', 'keydown'].forEach((ev) => document.addEventListener(ev, bumpIdle, { passive: true }));
+
+/* ============================================================
+   관리자: 데이터
+   ============================================================ */
+async function loadAdmin(quiet = false) {
+  const a = state.admin;
+  renderAdminDate();
+  if (!quiet) setLoading(true, '불러오는 중입니다...');
+  try {
+    a.data = await api({ action: 'admin', password: a.pw, date: a.date, dates: weekOf(a.date) });
+    renderWeek(); renderAdminDate(); renderClosure(); renderRes(); renderInspect(); renderBans();
+    if (a.tab === 'settings' && !el.panelSettings.dataset.loaded) fillSettings();
+  } catch (err) {
+    toast(err.message, 'error');
+    if (/비밀번호/.test(err.message)) exitAdmin();
+  } finally {
+    if (!quiet) setLoading(false);
+  }
+}
+function selectDate(d) { state.admin.date = d; state.admin.inspect = {}; loadAdmin(); }
+
+el.weekPrev.addEventListener('click', () => selectDate(addDays(weekOf(state.admin.date)[0], -7)));
+el.weekNext.addEventListener('click', () => selectDate(addDays(weekOf(state.admin.date)[0], 7)));
+el.btnToday.addEventListener('click', () => { const t = seoulNow().date; selectDate(isWeekend(t) ? nextSchoolDay(t) : t); });
+el.btnRefresh.addEventListener('click', () => loadAdmin());
+el.weekStrip.addEventListener('click', (e) => { const b = e.target.closest('[data-date]'); if (b && b.dataset.date !== state.admin.date) selectDate(b.dataset.date); });
+
+function renderWeek() {
+  const a = state.admin, today = seoulNow().date;
+  const dates = weekOf(a.date);
+  const sameMonth = dates[0].slice(5, 7) === dates[4].slice(5, 7);
+  el.weekLabel.textContent = `${fmtDate(dates[0], false)} – ${sameMonth ? Number(dates[4].slice(8)) + '일' : fmtDate(dates[4], false)}`;
+  const week = (a.data && a.data.week) || [];
+  el.weekStrip.innerHTML = dates.map((d) => {
+    const w = week.find((x) => x.date === d) || { people: 0, inspected: false, closed: false };
+    const sel = d === a.date;
+    let dot = '';
+    if (w.inspected) dot = '<span class="h-2 w-2 rounded-full bg-good" title="점검 완료"></span>';
+    else if (d <= today && w.people > 0) dot = '<span class="h-2 w-2 rounded-full bg-bad" title="미점검"></span>';
+    return `
+      <button type="button" data-date="${d}" aria-pressed="${sel}" class="press flex flex-col items-center gap-0.5 rounded-2xl py-2.5 ${sel ? 'bg-brand text-white' : 'bg-field text-ink hover:bg-line'}">
+        <span class="text-[12px] font-semibold ${sel ? 'text-white/80' : 'text-mute'}">${WD[dow(d)]}${d === today ? '·오늘' : ''}</span>
+        <span class="text-[18px] font-bold leading-tight">${Number(d.slice(8))}</span>
+        <span class="text-[12px] font-semibold ${sel ? 'text-white/90' : w.closed ? 'text-bad' : 'text-sub'}">${w.closed ? '휴관' : w.people ? w.people + '명' : '–'}</span>
+        <span class="flex h-2 items-center">${dot}</span>
+      </button>`;
+  }).join('');
+}
+
+function renderAdminDate() {
+  const a = state.admin, today = seoulNow().date;
+  el.adminDate.textContent = a.date ? fmtDate(a.date) + (a.date === today ? ' · 오늘' : a.date === nextSchoolDay(today) ? ' · 다음 등교일' : '') : '';
+  if (!a.data) { el.adminDateState.className = 'hidden'; return; }
+  const insp = a.data.day.inspection;
+  if (a.data.day.closed) { el.adminDateState.className = 'mb-1 rounded-full bg-badsoft px-3 py-1 text-[12px] font-bold text-bad'; el.adminDateState.textContent = '휴관'; }
+  else if (insp) { el.adminDateState.className = 'mb-1 rounded-full bg-goodsoft px-3 py-1 text-[12px] font-bold text-good'; el.adminDateState.textContent = '점검 완료'; }
+  else if (a.date <= today) { el.adminDateState.className = 'mb-1 rounded-full bg-badsoft px-3 py-1 text-[12px] font-bold text-bad'; el.adminDateState.textContent = '미점검'; }
+  else { el.adminDateState.className = 'mb-1 rounded-full bg-field px-3 py-1 text-[12px] font-bold text-sub'; el.adminDateState.textContent = '이용 전'; }
+}
+
+/* ---------- 관리자: 탭 ---------- */
+function setAdminTab(tab) {
+  state.admin.tab = tab;
+  paintChoice(document.querySelectorAll('[data-atab]'), (b) => b.dataset.atab === tab,
+    'press h-12 rounded-2xl text-[13px] font-bold sm:text-[15px]', 'bg-card text-ink shadow-sm', 'text-mute', 'aria-selected');
+  el.panelRes.classList.toggle('hidden', tab !== 'res');
+  el.panelInspect.classList.toggle('hidden', tab !== 'inspect'); el.panelInspect.classList.toggle('grid', tab === 'inspect');
+  el.panelBan.classList.toggle('hidden', tab !== 'ban');
+  el.panelSettings.classList.toggle('hidden', tab !== 'settings');
+  if (tab === 'settings' && state.admin.data) fillSettings();
+  if (tab === 'ban') renderBanPreview();
+}
+document.querySelectorAll('[data-atab]').forEach((b) => b.addEventListener('click', () => setAdminTab(b.dataset.atab)));
+
+/* ---------- 관리자: 예약 현황 ---------- */
+const AVATAR = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="9" r="4" stroke="currentColor" stroke-width="2"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+function resRow(r, canCancel) {
+  const canceled = r.status !== '예약';
+  const photo = r.thumb
+    ? `<button type="button" data-photo="${esc(r.key)}" class="press h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-field" aria-label="${esc(r.members[0].name)} 사진 크게 보기"><img src="${r.thumb}" alt="" class="h-full w-full object-cover"></button>`
+    : `<span class="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-field text-mute" title="사진 없음">${AVATAR}</span>`;
+  const many = r.members.length > 6;
+  const shown = many ? r.members.slice(0, 4) : r.members;
+  return `
+    <div class="flex items-start gap-3 py-3.5 ${canceled ? 'opacity-60' : ''}">
+      ${photo}
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span class="rounded-md bg-ink px-1.5 py-0.5 text-[12px] font-bold tabular-nums text-card">${esc(r.code)}</span>
+          <span class="rounded-md px-1.5 py-0.5 text-[12px] font-bold ${r.type === '단체' ? 'bg-brandsoft text-brand' : 'bg-field text-sub'}">${esc(r.type)} ${r.members.length}</span>
+          ${shown.map((m, i) => `<span class="whitespace-nowrap text-[15px] font-semibold"><span class="text-sub">${esc(m.id)}</span> ${esc(m.name)}${i === 0 && r.members.length > 1 ? '<span class="ml-0.5 text-[11px] font-bold text-brand">대표</span>' : ''}</span>`).join('')}
+        </div>
+        ${many ? `<details class="mt-1"><summary class="text-[13px] font-semibold text-brand">외 ${r.members.length - shown.length}명 보기</summary><p class="mt-1 text-[14px] font-medium leading-relaxed text-sub">${r.members.slice(shown.length).map((m) => `${esc(m.id)} ${esc(m.name)}`).join(' · ')}</p></details>` : ''}
+        <p class="mt-1 text-[12px] text-mute">${canceled ? esc(placeLabel(r.place)) + ' · ' : ''}접수 ${esc(fmtStamp(r.createdAt))}${r.updatedAt && !canceled ? ` · 수정 ${esc(fmtStamp(r.updatedAt))}` : ''}${canceled ? ` · ${esc(r.status)} ${esc(fmtStamp(r.updatedAt))}` : ''}</p>
+        ${canceled && r.reason ? `<p class="mt-0.5 text-[12px] font-semibold text-bad">사유: ${esc(r.reason)}</p>` : ''}
+      </div>
+      ${canCancel ? `<button type="button" data-acancel="${esc(r.key)}" class="press h-9 shrink-0 rounded-xl bg-field px-3 text-[13px] font-bold text-sub hover:text-bad">취소</button>` : ''}
+    </div>`;
+}
+
+function renderRes() {
+  const a = state.admin, d = a.data; if (!d) return;
+  const all = d.day.reservations || [];
+  const active = all.filter((r) => r.status === '예약');
+  const canceled = all.filter((r) => r.status !== '예약');
+  const occ = occupancyOf(active);
+  const mapHtml = renderMap(occ, { selectable: false, restCap: d.restCapacity });
+  el.adminMap.innerHTML = d.day.closed ? frozenMap(mapHtml, '휴관일 · 예약 받지 않음', 'bg-bad text-white') : mapHtml;
+  const courtPeople = COURTS.reduce((n, c) => n + occ[c].people, 0);
+  el.resSummary.textContent = `예약 ${active.length}건 · 코트 ${courtPeople}명 · 휴식 ${occ[REST].people}명${occ[VOLLEY].people ? ` · 배구 ${occ[VOLLEY].people}명` : ''}`;
+  const canCancel = a.date >= seoulNow().date;
+  const groups = PLACES.map((p) => ({ p, list: active.filter((r) => r.place === p) })).filter((g) => g.list.length);
+  el.resList.innerHTML = groups.length
+    ? groups.map((g) => {
+      const o = occ[g.p];
+      const st = g.p === REST ? `${o.people}/${d.restCapacity}명` : g.p === VOLLEY ? `${o.people}명 · 대체육관 전체` : (o.group ? `${o.people}/${CONFIG.COURT_MAX} · 단체 사용` : `${o.people}/${CONFIG.COURT_MAX} · 개인`);
+      return `<div class="mt-3 rounded-2xl border-2 border-line px-4">
+        <div class="flex items-center justify-between gap-2 border-b border-line py-2.5">
+          <p class="text-[15px] font-bold">${esc(placeLabel(g.p))}</p>
+          <span class="text-[12px] font-bold text-sub">${st}</span>
+        </div>
+        <div class="divide-y divide-line">${g.list.map((r) => resRow(r, canCancel)).join('')}</div>
+      </div>`;
+    }).join('')
+    : '<p class="py-8 text-center text-[14px] font-semibold text-mute">이 날 예약이 없습니다.</p>';
+  el.canceledWrap.classList.toggle('hidden', !canceled.length);
+  el.canceledLabel.textContent = `취소된 예약 ${canceled.length}건`;
+  el.canceledList.innerHTML = canceled.map((r) => resRow(r, false)).join('');
+  el.btnCopyList.disabled = !active.length;
+  el.btnCopyList.classList.toggle('opacity-40', !active.length);
+}
+
+function findRes(key) { return (state.admin.data?.day.reservations || []).find((r) => r.key === key); }
+function onResClick(e) {
+  const ph = e.target.closest('[data-photo]');
+  if (ph) {
+    const r = findRes(ph.dataset.photo); if (!r) return;
+    el.photoModalImg.src = r.thumb;
+    el.photoModalTitle.textContent = resSummary(r);
+    el.photoModalLink.classList.toggle('hidden', !r.photoUrl);
+    if (r.photoUrl) el.photoModalLink.href = r.photoUrl;
+    show(el.photoModal);
+    return;
+  }
+  const b = e.target.closest('[data-acancel]'); if (!b) return;
+  openCancelModal(b.dataset.acancel);
+}
+
+/* ---------- 관리자: 취소 사유 입력 ---------- */
+const CANCEL_PRESETS = ['체육관 사정으로 이용 불가', '학교 행사로 코트 사용', '이용 규칙 위반', '중복·장난 예약', '시설 점검'];
+let cancelKey = null;
+function openCancelModal(key) {
+  const r = findRes(key); if (!r) return;
+  cancelKey = key;
+  el.cancelWhat.textContent = resSummary(r);
+  el.cancelReason.value = ''; el.cancelError.textContent = '';
+  el.cancelChips.innerHTML = CANCEL_PRESETS.map((t) => `<button type="button" data-preset="${esc(t)}" class="press rounded-full bg-field px-3 py-2 text-[13px] font-semibold text-sub hover:bg-line">${esc(t)}</button>`).join('');
+  show(el.cancelModal);
+  setTimeout(() => el.cancelReason.focus(), 50);
+}
+el.cancelChips.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-preset]'); if (!b) return;
+  el.cancelReason.value = b.dataset.preset; el.cancelError.textContent = ''; el.cancelReason.focus();
+});
+el.cancelModal.querySelector('[data-close]').addEventListener('click', () => hide(el.cancelModal));
+el.cancelForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const reason = el.cancelReason.value.replace(/\s+/g, ' ').trim();
+  if (!reason) { el.cancelError.textContent = '취소 사유를 입력하세요. 학생이 [내 예약 확인]에서 이 사유를 보게 됩니다.'; el.cancelReason.focus(); return; }
+  await task('취소하는 중입니다...', async () => {
+    await api({ action: 'adminCancel', password: state.admin.pw, key: cancelKey, reason });
+    hide(el.cancelModal);
+    toast('예약을 취소했습니다. 학생에게 사유가 표시됩니다.');
+    await loadAdmin(true);
+  }, (msg) => { el.cancelError.textContent = msg; });
+});
+
+/* ---------- 관리자: 휴관 (체육관 임시로 닫기) ---------- */
+function renderClosure() {
+  const a = state.admin, d = a.data; if (!d) return;
+  const closed = d.day.closed;
+  const past = a.date < seoulNow().date;
+  const active = (d.day.reservations || []).filter((r) => r.status === '예약').length;
+  if (closed) {
+    el.closureCard.innerHTML = `
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="flex items-center gap-2 text-[17px] font-bold"><span class="rounded-lg bg-bad px-2 py-0.5 text-[13px] text-white">휴관</span>이 날은 체육관을 열지 않아요</p>
+          <p class="mt-1 text-[13px] text-sub">학생 화면에 '휴관'으로 표시되고 예약을 받지 않습니다.${closed.memo ? ` 메모: ${esc(closed.memo)}` : ''}</p>
+          <p class="mt-0.5 text-[12px] text-mute">${esc(fmtStamp(closed.createdAt))}에 닫음</p>
+        </div>
+        ${past ? '' : '<button type="button" id="btnReopen" class="press h-11 shrink-0 rounded-xl bg-field px-4 text-[14px] font-bold text-ink">다시 열기</button>'}
+      </div>
+      ${past ? '' : '<p class="mt-3 text-[12px] text-mute">다시 열어도 취소된 예약은 되살아나지 않습니다.</p>'}`;
+  } else if (past) {
+    el.closureCard.innerHTML = '<p class="text-[14px] font-semibold text-mute">지난 날짜는 체육관 운영 상태를 바꿀 수 없습니다.</p>';
+  } else {
+    el.closureCard.innerHTML = `
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <p class="flex items-center gap-2 text-[17px] font-bold"><span class="rounded-lg bg-goodsoft px-2 py-0.5 text-[13px] text-good">운영</span>체육관 임시로 닫기</p>
+          <p class="mt-1 text-[13px] leading-relaxed text-sub">닫으면 예약을 받지 않고, 이미 들어온 예약 <b class="text-ink">${active}건</b>은 '${CLOSED_REASON}' 사유로 취소됩니다.</p>
+        </div>
+      </div>
+      <div class="mt-3 flex gap-2">
+        <input id="closeMemo" type="text" maxlength="60" placeholder="덧붙일 내용 (선택, 예: 학교 축제)" aria-label="휴관 메모" class="field !mt-0 !h-12 min-w-0 flex-1">
+        <button type="button" id="btnClose" class="press h-12 shrink-0 rounded-2xl bg-bad px-4 text-[14px] font-bold text-white">이 날 닫기</button>
+      </div>`;
+  }
+}
+el.closureCard.addEventListener('click', (e) => {
+  const close = e.target.closest('#btnClose'), reopen = e.target.closest('#btnReopen');
+  if (!close && !reopen) return;
+  const btn = close || reopen;
+  armButton(btn, close ? '한 번 더 누르면 닫기' : '한 번 더 누르면 열기', () => task(undefined, async () => {
+    const memo = close ? ($('#closeMemo')?.value || '') : '';
+    const r = await api({ action: 'setClosed', password: state.admin.pw, date: state.admin.date, closed: !!close, memo });
+    toast(close ? `${fmtDate(state.admin.date, false)} 체육관을 닫았습니다.${r.canceled ? ` 예약 ${r.canceled}건을 취소했습니다.` : ''}` : `${fmtDate(state.admin.date, false)} 체육관을 다시 열었습니다.`);
+    await loadAdmin(true);
+  }));
+});
+el.resList.addEventListener('click', onResClick);
+el.canceledList.addEventListener('click', onResClick);
+el.photoModal.querySelector('[data-close]').addEventListener('click', () => hide(el.photoModal));
+el.photoModal.addEventListener('click', (e) => { if (e.target === el.photoModal) hide(el.photoModal); });
+
+el.btnCopyList.addEventListener('click', async () => {
+  const d = state.admin.data; if (!d) return;
+  const active = d.day.reservations.filter((r) => r.status === '예약');
+  const lines = [`${fmtDate(state.admin.date)} 체육관 예약 명단 (${peopleOf(active)}명)`, '장소\t예약번호\t구분\t학번\t이름'];
+  PLACES.forEach((p) => active.filter((r) => r.place === p).forEach((r) => r.members.forEach((m) => lines.push(`${placeLabel(p)}\t${r.code}\t${r.type}\t${m.id}\t${m.name}`))));
+  const text = lines.join('\n');
+  try { await navigator.clipboard.writeText(text); }
+  catch {
+    const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch {}
+    ta.remove();
+  }
+  toast('명단을 복사했습니다. 엑셀이나 한글에 붙여넣으세요.');
+});
+
+/* ---------- 관리자: 관리 점검 ---------- */
+function renderInspect() {
+  const a = state.admin, d = a.data; if (!d) return;
+  const insp = d.day.inspection;
+  const today = seoulNow().date;
+  if (insp && !Object.keys(a.inspect).length) {
+    a.inspect = { ...insp.items };
+    el.inspector.value = insp.inspector || '';
+    el.memo.value = insp.memo || '';
+  } else if (!insp && !Object.keys(a.inspect).length) {
+    el.memo.value = '';
+  }
+  const future = a.date > today;
+  el.inspectState.textContent = future
+    ? '아직 이용일이 아닙니다. 이용일 점심시간이 끝난 뒤에 기록하세요.'
+    : insp ? `${fmtStamp(insp.savedAt)} ${insp.inspector} 선생님이 저장함 · 수정하면 덮어씁니다.` : '아직 점검 기록이 없습니다.';
+  el.inspectItems.innerHTML = INSPECT_ITEMS.map((it, i) => {
+    const v = a.inspect[it.key];
+    const btn = (val, onCls) => `<button type="button" data-key="${it.key}" data-val="${val}" aria-pressed="${v === val}" ${future ? 'disabled' : ''}
+        class="press h-11 flex-1 rounded-xl text-[15px] font-bold disabled:opacity-40 sm:w-20 sm:flex-none ${v === val ? onCls : 'bg-field text-sub'}">${val}</button>`;
+    return `
+      <div class="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-start gap-3">
+          <span class="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brandsoft text-[12px] font-bold text-brand">${i + 1}</span>
+          <div><p class="text-[16px] font-bold">${it.label}</p><p class="mt-0.5 text-[13px] text-mute">${it.desc}</p></div>
+        </div>
+        <div class="flex gap-1.5 sm:shrink-0">${btn(it.good, 'bg-good text-white')}${btn(it.bad, 'bg-bad text-white')}</div>
+      </div>`;
+  }).join('');
+  el.inspector.disabled = future; el.memo.disabled = future;
+  updateInspect();
+}
+el.inspectItems.addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-key]'); if (!b || b.disabled) return;
+  state.admin.inspect[b.dataset.key] = b.dataset.val;
+  renderInspect();
+});
+function updateInspect() {
+  const a = state.admin;
+  const total = INSPECT_ITEMS.length;
+  const done = INSPECT_ITEMS.filter((it) => a.inspect[it.key]).length;
+  const bad = inspectBadCount(a.inspect);
+  const needMemo = bad > 0 && !el.memo.value.trim();
+  const future = a.date > seoulNow().date;
+  if (done < total) { el.inspectSummary.className = 'mt-5 rounded-2xl bg-field px-4 py-3 text-[14px] font-semibold text-sub'; el.inspectSummary.textContent = `${total}개 항목 중 ${done}개 점검함`; }
+  else if (bad) { el.inspectSummary.className = 'mt-5 rounded-2xl bg-badsoft px-4 py-3 text-[14px] font-semibold text-bad'; el.inspectSummary.textContent = needMemo ? `문제 ${bad}건 · 특이사항에 내용을 적어야 저장할 수 있어요` : `문제 ${bad}건`; }
+  else { el.inspectSummary.className = 'mt-5 rounded-2xl bg-goodsoft px-4 py-3 text-[14px] font-semibold text-good'; el.inspectSummary.textContent = '문제 없음'; }
+  el.btnInspectSave.disabled = future || needMemo || !(done === total && el.inspector.value.trim());
+  el.btnInspectSave.textContent = a.data && a.data.day.inspection ? '점검 내용 수정' : '점검 내용 저장';
+}
+el.inspector.addEventListener('input', updateInspect);
+el.memo.addEventListener('input', updateInspect);
+
+el.panelInspect.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (el.btnInspectSave.disabled) return;
+  await task(undefined, async () => {
+    await api({ action: 'inspection', password: state.admin.pw, date: state.admin.date, inspector: el.inspector.value.trim(), items: { ...state.admin.inspect }, memo: el.memo.value.trim() });
+    toast(`${fmtDate(state.admin.date, false)} 점검 내용을 저장했습니다.`);
+    state.admin.inspect = {};
+    await loadAdmin(true);
+  });
+});
+
+/* ---------- 관리자: 이용 제한 ---------- */
+function setBanKind(kind) {
+  state.admin.banKind = kind;
+  paintChoice(el.banForm.querySelectorAll('[data-bankind]'), (b) => b.dataset.bankind === kind,
+    'press h-11 rounded-[14px] text-[15px] font-bold', 'bg-card text-ink shadow-sm', 'text-mute');
+  el.banDaysRow.classList.toggle('hidden', kind !== '기간');
+  el.banDaysRow.classList.toggle('flex', kind === '기간');
+  renderBanPreview();
+}
+function banDays() { return Math.round(Number(el.banDays.value)); }
+function renderBanPreview() {
+  const start = nextSchoolDay(seoulNow().date);
+  if (state.admin.banKind === '무기한') {
+    el.banPreview.textContent = `${fmtDate(start)}부터 해제할 때까지 · 학생에게 "점심시간에 체육관을 이용할 수 없는 학생이에요"라고 표시됩니다.`;
+    return;
+  }
+  const n = banDays();
+  if (!(n >= 1 && n <= 60)) { el.banPreview.textContent = '정지 일수는 1~60일 사이로 입력하세요.'; return; }
+  const end = addSchoolDays(start, n - 1);
+  el.banPreview.textContent = `${fmtDate(start)}부터 ${fmtDate(end)}까지 (등교일 기준 ${n}일) · 학생에게 "${n}일간 체육관을 이용할 수 없는 학생이에요"라고 표시됩니다.`;
+}
+el.banForm.querySelectorAll('[data-bankind]').forEach((b) => b.addEventListener('click', () => setBanKind(b.dataset.bankind)));
+el.banForm.querySelectorAll('[data-days]').forEach((b) => b.addEventListener('click', () => {
+  el.banDays.value = Math.min(60, Math.max(1, (banDays() || 0) + Number(b.dataset.days)));
+  renderBanPreview();
+}));
+el.banDays.addEventListener('input', renderBanPreview);
+el.banId.addEventListener('input', () => { el.banId.value = el.banId.value.replace(/\D/g, '').slice(0, 5); });
+
+el.banForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  el.banError.textContent = '';
+  const studentId = el.banId.value.trim(), name = el.banName.value.trim(), kind = state.admin.banKind, days = banDays();
+  if (!/^\d{5}$/.test(studentId)) { el.banError.textContent = '학번을 5자리 숫자로 입력하세요.'; el.banId.focus(); return; }
+  if (!name) { el.banError.textContent = '이름을 입력하세요.'; el.banName.focus(); return; }
+  if (kind === '기간' && !(days >= 1 && days <= 60)) { el.banError.textContent = '정지 일수는 1~60일 사이로 입력하세요.'; return; }
+  await task(undefined, async () => {
+    const r = await api({ action: 'addBan', password: state.admin.pw, studentId, name, kind, days, reason: el.banReason.value.trim() });
+    toast(`${studentId} ${name} 학생을 이용 제한했습니다.` + (r.canceled ? ` 기존 예약 ${r.canceled}건을 취소했습니다.` : ''));
+    el.banId.value = ''; el.banName.value = ''; el.banReason.value = '';
+    await loadAdmin(true);
+  }, (msg) => { el.banError.textContent = msg; });
+});
+
+function banRow(b, canLift) {
+  const period = b.kind === '무기한' ? `${fmtDate(b.start, false)}부터 무기한` : `${b.days}일 정지 · ${fmtDate(b.start, false)} ~ ${fmtDate(b.end, false)}`;
+  const badge = b.status === '적용'
+    ? `<span class="rounded-md bg-badsoft px-1.5 py-0.5 text-[12px] font-bold text-bad">${b.kind === '무기한' ? '무기한' : b.days + '일'}</span>`
+    : `<span class="rounded-md bg-field px-1.5 py-0.5 text-[12px] font-bold text-sub">${esc(b.status)}</span>`;
+  return `
+    <div class="flex items-start gap-3 py-3.5">
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-center gap-2">${badge}<span class="text-[15px] font-semibold"><span class="text-sub">${esc(b.studentId)}</span> ${esc(b.name)}</span></div>
+        <p class="mt-1 text-[13px] font-medium text-sub">${period}</p>
+        ${b.reason ? `<p class="mt-0.5 text-[13px] text-mute">사유: ${esc(b.reason)}</p>` : ''}
+        <p class="mt-0.5 text-[12px] text-mute">등록 ${esc(fmtStamp(b.createdAt))}${b.liftedAt ? ` · 해제 ${esc(fmtStamp(b.liftedAt))}` : ''}</p>
+      </div>
+      ${canLift ? `<button type="button" data-lift="${esc(b.id)}" class="press h-9 shrink-0 rounded-xl bg-field px-3 text-[13px] font-bold text-sub">해제</button>` : ''}
+    </div>`;
+}
+function renderBans() {
+  const d = state.admin.data; if (!d) return;
+  const bans = d.bans || [], hist = d.banHistory || [];
+  el.banCount.textContent = bans.length ? `${bans.length}명` : '';
+  el.banList.innerHTML = bans.length ? bans.map((b) => banRow(b, true)).join('') : '<p class="py-6 text-center text-[14px] font-semibold text-mute">제한 중인 학생이 없습니다.</p>';
+  el.banHistoryWrap.classList.toggle('hidden', !hist.length);
+  el.banHistory.innerHTML = hist.map((b) => banRow(b, false)).join('');
+}
+el.banList.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-lift]'); if (!b) return;
+  armButton(b, '확인', () => task(undefined, async () => {
+    await api({ action: 'liftBan', password: state.admin.pw, banId: b.dataset.lift });
+    toast('이용 제한을 해제했습니다.');
+    await loadAdmin(true);
+  }));
+});
+
+/* ---------- 관리자: 공지·설정 ---------- */
+const ICON = {
+  up: '<path d="M6 15l6-6 6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
+  down: '<path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
+  del: '<path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'
+};
+const iconBtn = (act, label, extra = '') =>
+  `<button type="button" data-act="${act}" aria-label="${label}" class="press grid h-10 w-10 place-items-center rounded-xl bg-card text-mute ${extra}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">${ICON[act]}</svg></button>`;
+
+function fitTextarea(ta) {
+  if (!ta.isConnected || ta.offsetParent === null) return; // 숨겨진 상태에선 높이를 잴 수 없음
+  ta.style.height = 'auto';
+  ta.style.height = (ta.scrollHeight + 4) + 'px';
+}
+function setRowSize(row, size) {
+  row.dataset.size = size;
+  paintChoice(row.querySelectorAll('[data-size]'), (b) => b.dataset.size === size,
+    'press h-10 rounded-xl px-3.5 text-[14px] font-bold', 'bg-brand text-white', 'text-sub', 'aria-pressed');
+  const ta = row.querySelector('textarea');
+  ta.maxLength = NOTICE_MAX[size];
+  ta.rows = size === 'long' ? 4 : 1;
+  ta.style.resize = size === 'long' ? 'vertical' : 'none';
+  ta.placeholder = size === 'long' ? '자세한 안내를 여러 줄로 쓸 수 있습니다' : '짧은 한 줄 공지';
+  if (size === 'short') ta.value = ta.value.replace(/\s*\n\s*/g, ' ');
+  if (ta.value.length > NOTICE_MAX[size]) ta.value = ta.value.slice(0, NOTICE_MAX[size]);
+  updateRowCount(row);
+  fitTextarea(ta);
+}
+function updateRowCount(row) { const ta = row.querySelector('textarea'); row.querySelector('.count').textContent = `${ta.value.length} / ${ta.maxLength}`; }
+
+function addNoticeRow(n = { size: 'short', text: '' }) {
+  const row = document.createElement('div');
+  row.className = 'notice-row rounded-2xl bg-field p-3';
+  row.innerHTML = `
+    <div class="flex items-center justify-between gap-2">
+      <div class="flex rounded-xl bg-card p-0.5" role="group" aria-label="공지 크기">
+        <button type="button" data-size="short">작은 바</button>
+        <button type="button" data-size="long">긴 바</button>
+      </div>
+      <div class="flex gap-1">${iconBtn('up', '위로')}${iconBtn('down', '아래로')}${iconBtn('del', '삭제', 'hover:text-bad')}</div>
+    </div>
+    <textarea class="field !mt-2 !bg-card text-[15px]" aria-label="공지 내용"></textarea>
+    <p class="count mt-1 text-right text-[12px] text-mute"></p>`;
+  const ta = row.querySelector('textarea');
+  ta.value = n.text;
+  ta.addEventListener('input', () => {
+    if (row.dataset.size === 'short' && ta.value.includes('\n')) ta.value = ta.value.replace(/\s*\n\s*/g, ' ');
+    updateRowCount(row); fitTextarea(ta);
+  });
+  ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && row.dataset.size === 'short') e.preventDefault(); });
+  row.addEventListener('click', (e) => {
+    const sizeBtn = e.target.closest('[data-size]');
+    if (sizeBtn) { setRowSize(row, sizeBtn.dataset.size); ta.focus(); return; }
+    const act = e.target.closest('[data-act]'); if (!act) return;
+    if (act.dataset.act === 'del') row.remove();
+    if (act.dataset.act === 'up' && row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling);
+    if (act.dataset.act === 'down' && row.nextElementSibling) row.parentNode.insertBefore(row.nextElementSibling, row);
+    refreshAddButtons();
+  });
+  el.noticeRows.appendChild(row);
+  setRowSize(row, n.size);
+  requestAnimationFrame(() => fitTextarea(ta));
+  refreshAddButtons();
+  return row;
+}
+function refreshAddButtons() {
+  const full = el.noticeRows.children.length >= 10;
+  el.panelSettings.querySelectorAll('[data-add]').forEach((b) => { b.disabled = full; b.classList.toggle('opacity-40', full); });
+}
+el.panelSettings.querySelectorAll('[data-add]').forEach((b) => b.addEventListener('click', () => {
+  if (el.noticeRows.children.length >= 10) return;
+  addNoticeRow({ size: b.dataset.add, text: '' }).querySelector('textarea').focus();
+}));
+
+function fillSettings() {
+  const d = state.admin.data; if (!d) return;
+  el.restCapInput.value = d.restCapacity;
+  el.noticeRows.innerHTML = '';
+  const notices = normNotices(d.notices && d.notices.length ? d.notices : (d.notices ? [] : CONFIG.DEFAULT_NOTICES));
+  notices.forEach((n) => addNoticeRow(n));
+  if (!notices.length) addNoticeRow();
+  el.settingsError.textContent = '';
+  el.panelSettings.dataset.loaded = '1';
+  el.btnDemoReset.classList.toggle('hidden', isConnected());
+}
+
+el.panelSettings.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  el.settingsError.textContent = '';
+  const restCapacity = Math.round(Number(el.restCapInput.value));
+  if (!(restCapacity >= 0 && restCapacity <= 300)) { el.settingsError.textContent = '휴식 최대 인원은 0~300명 사이로 입력하세요.'; el.restCapInput.focus(); return; }
+  const notices = [...el.noticeRows.querySelectorAll('.notice-row')]
+    .map((row) => ({ size: row.dataset.size, text: row.querySelector('textarea').value.trim() }))
+    .filter((n) => n.text)
+    .map((n) => ({ size: n.size, text: n.size === 'long' ? n.text.replace(/\n{3,}/g, '\n\n') : n.text }));
+  await task(undefined, async () => {
+    await api({ action: 'saveSettings', password: state.admin.pw, notices, restCapacity });
+    toast('공지와 설정을 저장했습니다.');
+    store.set('gym.public', { notices });
+    renderNotices(notices);
+    delete el.panelSettings.dataset.loaded;
+    await loadAdmin(true);
+    fillSettings();
+  }, (msg) => { el.settingsError.textContent = msg; });
+});
+
+el.btnDemoReset.addEventListener('click', () => armButton(el.btnDemoReset, '한 번 더 누르면 초기화', async () => {
+  store.del(DEMO_KEY); store.del('gym.public'); demoMem = null;
+  delete el.panelSettings.dataset.loaded;
+  await loadAdmin();
+  fillSettings();
+  toast('데모 데이터를 처음 상태로 되돌렸습니다.');
+}));
+
+/* ---------- 키보드 ---------- */
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (!el.pwModal.classList.contains('hidden')) closePw();
+  else if (!el.photoModal.classList.contains('hidden')) hide(el.photoModal);
+  else if (!el.cancelModal.classList.contains('hidden')) hide(el.cancelModal);
+  else if (!el.doneModal.classList.contains('hidden')) hide(el.doneModal);
+});
+
+/* ---------- 시작 ---------- */
+function renderMode() {
+  el.schoolName.textContent = CONFIG.SCHOOL_NAME;
+  if (!isConnected()) {
+    el.modeBadge.className = 'inline-flex items-center rounded-full bg-line px-3 py-1.5 text-[12px] font-semibold text-sub';
+    el.modeBadge.textContent = '데모';
+    el.modeBadge.title = 'GAS_URL을 설정하면 구글 시트에 저장됩니다. 지금은 이 브라우저에만 저장됩니다.';
+  }
+}
+// 이미 카메라 권한을 허용한 기기라면 버튼 없이 바로 켜기
+async function autoStartIfGranted() {
+  try {
+    if (IN_GAS || !navigator.permissions || cameraBlockReason()) return;
+    const p = await navigator.permissions.query({ name: 'camera' });
+    if (p.state === 'granted') startCamera();
+  } catch { /* 지원하지 않는 브라우저는 버튼으로 시작 */ }
+}
+
+// 구글 모드: 휴대폰 카메라 앱으로 찍기를 기본 버튼으로
+if (IN_GAS) {
+  el.btnCamStart.textContent = '사진 찍기';
+  el.btnCamAlt.textContent = '실시간 카메라로 찍기 (안 될 수 있어요)';
+  el.camStartText.innerHTML = '버튼을 누르면 휴대폰 카메라가 열려요. <b class="text-ink">얼굴이 잘 보이게</b> 찍어 주세요.';
+}
+renderMode();
+renderLockButton();
+renderType();
+renderMembers();
+setBanKind('기간');
+showCamStart();
+loadPublic();
+autoStartIfGranted();
+</script>
+</body>
+</html>
