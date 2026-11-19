@@ -1,115 +1,52 @@
-# 체육관 점심시간 예약
+# 내손 체육관 예약
 
-학생이 휴대폰으로 체육관 코트·휴식·배구를 예약하고, 관리자가 예약 현황·관리 점검·이용 제한·휴관을 관리하는 웹앱입니다.
+학생 예약 화면은 Firebase Hosting, 예약·공지·점검·이용 제한·휴관 기록은 Cloud Firestore, 예약 원본 사진은 Google Drive에 저장합니다. Google Apps Script가 서버에서 관리자 인증과 예약 규칙을 검사합니다.
 
-- **화면**: GitHub Pages (무료, `https://아이디.github.io/저장소이름/`)
-- **저장**: Google Apps Script + Google 스프레드시트 (무료), 사진은 Google 드라이브
+- 사이트 https://naeson-gym-reservation.web.app
+- Firebase 프로젝트 `naeson-gym-reservation-fa397`
+- Firestore Standard, 서울 `asia-northeast3`
+- 사진 폴더 https://drive.google.com/drive/u/0/folders/1p_ZujlcdwI_xyzIU75RxX74HXuqpfsS6
 
+## 최초 서버 연결
+
+1. Firebase 프로젝트 소유자이자 사진 폴더에 파일을 만들 수 있는 Google 계정으로 https://script.google.com/home/start 에서 새 프로젝트를 만듭니다.
+2. 기본 `Code.gs` 내용을 이 저장소 `apps-script/Code.gs`의 전체 내용으로 바꿉니다. HTML 파일은 필요하지 않습니다.
+3. 왼쪽 프로젝트 설정에서 ‘편집기에 appsscript.json 매니페스트 파일 표시’를 켭니다. 편집기로 돌아와 `appsscript.json`을 이 저장소의 `apps-script/appsscript.json` 내용으로 바꿉니다.
+4. 저장하고 상단 함수 선택 메뉴에서 `setup`을 선택해 실행합니다. Google이 표시하는 Drive 및 데이터베이스 접근 권한을 직접 검토·승인합니다. 실행 로그에 ‘Firestore 연결 완료’가 표시되는지 확인합니다. 새 프로젝트의 관리자 비밀번호는 `0108`로 초기화하며 이후 프로젝트 설정의 스크립트 속성 `ADMIN_PASSWORD`에서 변경합니다.
+5. 오른쪽 상단 배포 → 새 배포 → 유형 ‘웹 앱’을 선택합니다. 실행 계정은 ‘나’, 액세스 권한은 ‘모든 사용자’로 지정합니다. 학교 계정에서 이 옵션이 제한되면 도메인 관리자 설정을 확인해야 합니다.
+6. 배포한 웹 앱의 `/exec`로 끝나는 URL을 `public/config.js`의 `GAS_URL`에 넣고 Firebase Hosting에 재배포합니다. API URL은 비밀값이 아닙니다. 관리자 비밀번호나 Google OAuth 토큰은 config.js에 넣지 않습니다.
+7. 휴대폰에서 예약한 뒤 다른 기기의 관리자 화면에 나타나는지, 원본 사진이 지정 폴더에 생기는지 확인합니다.
+
+Apps Script 웹 앱 배포 주소가 설정되기 전까지 사이트는 브라우저 데모 모드로 실행됩니다. 기존 기기에만 저장된 데모 기록은 Firestore로 자동 이전하지 않습니다.
+
+## 서버 동작
+
+- 모든 예약 요청에서 한국 시간의 예약 주간, 당일·과거 날짜, 2026–2027년 공휴일, 휴관일, 이용 제한, 중복 학번, 코트·휴식 정원, 배구와 대체육관의 상호 배타 규칙을 검사합니다.
+- 원본 JPEG 사진은 지정한 Drive 폴더에 저장합니다. 앱은 파일에 공개 권한을 추가하지 않습니다. 접근 권한은 폴더에서 상속하므로 교사의 원본 사진 열람 권한은 폴더 소유자가 관리합니다.
+- Firestore의 reservations, inspections, bans, closures, settings 컬렉션에 기록을 저장합니다. `cells` 배열은 기존 필드 순서를 유지합니다. 예약 필드 순서는 Code.gs의 HEADERS.reserve에 정의돼 있습니다. 관리자에게 보여 줄 작은 썸네일과 원본 Drive 링크는 예약 기록에 포함됩니다.
+- 변경된 문서와 internal/revision을 한 번에 커밋합니다. Apps Script 잠금과 Firestore 갱신 시각 전제조건을 함께 사용해 동시 요청의 덮어쓰기를 막습니다. 다른 요청이 먼저 저장되면 새로 조회한 뒤 재시도하도록 안내합니다.
+- Google IAM으로 인증한 서버가 저장소를 읽고 씁니다. Firestore 클라이언트 규칙은 직접 접근을 전부 차단합니다. 학생 화면에는 날짜별 인원과 공지만 반환하며, 사진과 전체 명단은 서버의 관리자 비밀번호 검사를 거칩니다.
+- 학생 화면과 관리자 예약 현황은 보이는 화면에서 20초마다 갱신합니다. 점검·설정 편집 중에는 자동으로 덮어쓰지 않습니다.
+- 서버 응답이 유실되면 ‘내 예약 확인’에서 먼저 조회합니다. 예약 자체가 성공한 상황에서 다시 제출하면 중복 학번 검사가 막습니다.
+- 원본 사진 저장 이후 Firestore 저장 응답이 불확실한 경우, 이미 저장됐을 가능성이 있는 예약 사진을 지우지 않습니다. 이 경우 예약에 연결되지 않은 사진이 폴더에 남을 수 있습니다.
+- 공휴일 자료는 2026·2027년입니다. 새로운 연도와 임시공휴일은 Code.gs와 index.html의 PUBLIC_HOLIDAYS를 갱신하거나 관리자 휴관 기능으로 지정해야 합니다.
+
+## 배포 및 검증
+
+서버 코드를 바꾼 뒤에는 Apps Script에서 배포 → 배포 관리 → 수정 → 새 버전으로 배포합니다. 기존 배포를 수정하면 `/exec` 주소를 유지할 수 있습니다.
+
+```bash
+node tests/server.cjs
+npx -y firebase-tools@latest deploy --only firestore,hosting --project naeson-gym-reservation-fa397
 ```
-gym-reservation/
-├── public/                  ← GitHub Pages에 올라가는 화면
-│   ├── index.html           예약 화면 + 관리자 화면
-│   ├── config.js            ★ 학교 이름·서버 주소 (이 파일만 고치면 됨)
-│   └── .nojekyll
-├── apps-script/
-│   └── Code.gs              ← Google Apps Script에 붙여넣는 서버 코드
-└── .github/workflows/
-    └── deploy.yml           ← main에 올리면 자동 검사 → 자동 배포
-```
 
-> ⚠ GitHub 무료 계정의 Pages는 **공개 저장소**에서만 됩니다. 그래서 코드에는 비밀번호가 없고,
-> 관리자 비밀번호는 **Apps Script 스크립트 속성**에만 저장합니다. `config.js`에도 절대 비밀번호를 적지 마세요.
-> 학생 이름·사진 같은 데이터는 GitHub가 아니라 본인 구글 계정의 시트·드라이브에만 저장됩니다.
+Firestore·Drive 실제 연결은 Google 소유자 권한을 승인하고 위 웹 앱 배포를 완료한 뒤 확인해야 합니다. 테스트는 외부 서비스 응답을 모의하여 예약 규칙, 여러 서버 인스턴스의 공유 저장, 관리자 인증, 원자적 커밋 실패 및 동시 갱신 충돌을 검증합니다.
 
----
+GitHub Actions의 deploy.yml은 기존 GitHub Pages 배포입니다. GitHub에 올린 변경만으로 Firebase Hosting에 자동 반영되지는 않습니다. Firebase 배포는 위 CLI 명령으로 별도 실행합니다.
 
-## 1단계. 서버 만들기 (Google Apps Script, 약 10분)
+## 공식 참고 문서
 
-1. 구글 드라이브에서 **새 스프레드시트**를 만듭니다. (예: `체육관 예약 관리`)
-2. [확장 프로그램 → Apps Script]를 엽니다.
-3. 기본 `Code.gs` 내용을 모두 지우고 이 저장소의 **`apps-script/Code.gs`** 전체를 붙여넣은 뒤 저장(💾)합니다.
-4. **관리자 비밀번호 등록**
-   왼쪽 [⚙ 프로젝트 설정] → 맨 아래 [스크립트 속성] → [스크립트 속성 추가]
-   - 속성: `ADMIN_PASSWORD`
-   - 값: 관리자 비밀번호 (4자리 숫자보다 긴 것을 권장, `1234` 금지)
-5. 편집기로 돌아와 함수 목록에서 **`setup`** 선택 → ▶ 실행
-   권한 창: [권한 검토 → 계정 선택 → 고급 → (안전하지 않음)으로 이동 → 허용]
-   → 시트 탭 5개(예약·점검기록·이용제한·휴관일·설정)와 드라이브 폴더 `체육관 예약 사진`이 생기면 성공
-6. [배포 → 새 배포 → ⚙ 유형 선택: 웹 앱]
-   - 실행 사용자: **나**
-   - 액세스 권한: **모든 사용자** ← GitHub 화면에서 접속하려면 반드시 이것
-   - [배포] → 나오는 `https://script.google.com/macros/s/…/exec` 주소를 복사
-
-> 학교 구글 워크스페이스 계정에 "모든 사용자"가 없으면 관리자가 막아 둔 것입니다. 개인 구글 계정으로 1단계를 진행하세요.
-
-## 2단계. GitHub에 올리기 (약 5분)
-
-1. [github.com](https://github.com) 로그인 → 오른쪽 위 **＋ → New repository**
-   - 이름: 예) `gym-reservation` · **Public** · [Create repository]
-2. 새 저장소 화면에서 **uploading an existing file** 클릭
-   → 이 폴더 안의 내용(`public`, `apps-script`, `.github`, `README.md` …)을 **통째로 끌어다 놓기** → [Commit changes]
-   - `.github` 폴더가 안 보이면(숨김 폴더) 컴퓨터에서 숨김 파일 표시를 켜고 다시 끌어다 놓으세요.
-     또는 저장소에서 [Add file → Create new file]로 `.github/workflows/deploy.yml`을 만들고 내용을 붙여넣으세요.
-3. 저장소 **Settings → Pages → Build and deployment → Source** 를 **GitHub Actions** 로 바꿉니다.
-
-## 3단계. 서버 주소 연결
-
-1. 저장소에서 `public/config.js` 클릭 → 연필(✏ Edit) 아이콘
-2. 1단계에서 복사한 주소와 학교 이름을 넣습니다.
-   ```js
-   window.GYM_CONFIG = {
-     GAS_URL: 'https://script.google.com/macros/s/AKfycb.../exec',
-     SCHOOL_NAME: '○○중학교'
-   };
-   ```
-3. [Commit changes] → 자동으로 배포가 시작됩니다.
-4. 저장소 **Actions** 탭에서 `체육관 예약 배포`가 ✅ 초록색이 되면 완료 (1~2분)
-   사이트 주소: **Settings → Pages** 맨 위 (`https://아이디.github.io/gym-reservation/`)
-
-## 4단계. 실제 점검
-
-휴대폰 크롬/사파리로 사이트를 열고 확인합니다. 오른쪽 위에 **"데모"** 표시가 없으면 서버와 연결된 것입니다.
-
-- [ ] 예약 1건 (사진 포함) → 스프레드시트 `예약` 시트에 줄이 생기고 드라이브 폴더에 사진이 들어옴
-- [ ] [내 예약 확인]에서 학번·이름·예약번호로 조회
-- [ ] 🔒 → 비밀번호 → 관리자 화면 → 그 예약을 사유와 함께 취소 → 학생 조회 화면에 사유가 보임
-- [ ] 휴관 닫기/열기, 이용 제한 등록/해제, 공지 수정
-- [ ] 시험 데이터는 시트에서 행 삭제 (1행 머리글은 남기기)
-
-## 5단계. 학생들에게 배포
-
-- 사이트 주소를 **QR코드**로 만들어 체육관 입구·학급 단톡방에 게시
-- 안내 문구에 꼭 넣기
-  - **"예약번호를 꼭 기억하세요"** (확인·취소 때 필요)
-  - **"카톡에서 열면 [다른 브라우저로 열기]"** (카톡 안에서는 실시간 카메라가 막힘. 막혀도 [기기 카메라 앱으로 찍기]로 촬영 가능)
-- 휴대폰 [홈 화면에 추가]를 하면 앱처럼 쓸 수 있습니다.
-
----
-
-## 수정할 때
-
-| 바꿀 것 | 하는 방법 |
-|---|---|
-| 학교 이름·서버 주소 | GitHub에서 `public/config.js` 수정 → 저장하면 자동 배포 |
-| 화면 (`index.html`) | GitHub에서 수정 또는 새 파일 업로드 → 자동 배포 |
-| 서버 (`Code.gs`) | GitHub에 올린 뒤, **Apps Script에도 붙여넣고** [배포 → 배포 관리 → ✏ → 버전: 새 버전 → 배포] ("새 배포"를 누르면 주소가 바뀜) |
-| 관리자 비밀번호 | Apps Script [프로젝트 설정 → 스크립트 속성]에서 `ADMIN_PASSWORD` 값 수정 (재배포 필요 없음) |
-| 공지·휴식 정원 | 관리자 화면 [공지·설정] 탭 |
-| 코트·배구 인원, 예약 오픈 시각 | `index.html`과 `Code.gs` 위쪽 `CONFIG`를 **똑같이** 수정 |
-
-자동 배포 전에 GitHub가 검사를 합니다. 코드에 문법 오류가 있거나, 실수로 비밀번호를 코드에 적으면 배포가 멈추고 Actions 탭에 빨간 ❌로 표시됩니다.
-
-## 예약 규칙 요약
-
-- 매주 **일요일 오후 5시**에 다음 주(월~금) 예약이 열림. 당일·지난 날짜·휴관일은 예약 불가
-- 코트 1~4(대체육관)·코트 5(소체육관): 코트당 최대 4명. 단체(2~4명)는 빈 코트만, 예약하면 그 코트 마감. 개인은 4명까지 함께 사용
-- 휴식: 기본 30명 · 배구: 대체육관 전체, 10~20명, 선착순 (코트 예약이 먼저 있으면 불가 / 배구가 먼저면 코트 1~4 불가)
-- 예약번호: 일반 01~99, 배구 100~120 · 조회·취소·인원 수정은 학번+이름+예약번호
-- 대표 학생 얼굴 사진, 불이익 동의·기록 동의 필수 · 이용 제한 학생은 예약 불가(빨간 문구)
-
-## 알아둘 점
-
-- **비용**: GitHub Pages·Apps Script·시트·드라이브 모두 무료 범위 안에서 운영됩니다.
-- **일요일 오후 5시 몰림**: 무료 서버라 한꺼번에 몰리면 일부 학생에게 "서버에 연결하지 못했습니다"가 뜰 수 있습니다. 중복 예약은 생기지 않으니 다시 누르면 됩니다.
-- **개인정보**: 얼굴 사진은 학생 개인정보입니다. 운영 전 담당 선생님께 수집 동의·보관 기간을 확인받고, `체육관 예약 사진` 폴더를 학기마다 정리하세요.
-- **데모 모드**: `config.js`의 `GAS_URL`이 비어 있으면 서버 없이 그 브라우저에만 저장되는 데모로 동작합니다. (데모 관리자 비밀번호 `1234`)
+- https://firebase.google.com/docs/firestore/use-rest-api
+- https://developers.google.com/apps-script/guides/web
+- https://astro.kasi.re.kr/life/post/calendarData?year=2026
+- https://astro.kasi.re.kr/life/post/calendarData?year=2027

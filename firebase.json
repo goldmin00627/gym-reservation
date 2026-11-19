@@ -7,5 +7,10 @@
       "**/.*",
       "**/node_modules/**"
     ]
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json",
+    "location": "asia-northeast3"
   }
 }

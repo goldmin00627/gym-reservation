@@ -481,7 +481,7 @@
 const CONFIG = {
   // ● GitHub Pages 등: config.js 의 GAS_URL 에 Apps Script 웹 앱 주소(https://script.google.com/macros/s/.../exec)
   // ● 구글만으로 운영: 이 파일을 Apps Script의 HTML 파일 'index'로 넣으면 자동 연결 (GAS_URL 필요 없음)
-  // 둘 다 아니면 '데모 모드': 이 브라우저 안에만 저장됩니다. (데모 관리자 비밀번호 1234)
+  // 둘 다 아니면 '데모 모드': 이 브라우저 안에만 저장됩니다. (데모 관리자 비밀번호 0108)
   // ※ 실제 관리자 비밀번호는 Apps Script 스크립트 속성에만 있습니다.
   GAS_URL: String((window.GYM_CONFIG && window.GYM_CONFIG.GAS_URL) || '').trim(),
 
@@ -2339,5 +2339,15 @@ showCamStart();
 loadPublic();
 autoStartIfGranted();
 </script>
+
+<script>
+// Refresh shared availability while leaving settings and inspection edits alone.
+setInterval(() => {
+  if (!isConnected() || document.hidden || !el.loading.classList.contains('hidden')) return;
+  if (state.view === 'student') loadPublic();
+  else if (state.admin.tab === 'res') loadAdmin();
+}, 20000);
+</script>
+
 </body>
 </html>

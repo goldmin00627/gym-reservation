@@ -1,36 +1,8 @@
 /**
- * 체육관 예약 관리 — Google Apps Script
- *
- * [구글만으로 운영]  이 파일(Code.gs) + HTML 파일 'index'(= index.html 내용) 두 개를 Apps Script에 넣고
- *                   웹 앱으로 배포하면, 배포 주소 하나로 화면과 저장이 모두 돌아갑니다.
- * [GitHub Pages 등] 화면(public/)은 GitHub에, 이 파일은 Apps Script에 두고 config.js의 GAS_URL로 연결 (doPost 사용).
- *
- * 관리자 비밀번호는 코드에 적지 않습니다. (GitHub에 공개되므로)
- *   Apps Script [프로젝트 설정 ⚙ > 스크립트 속성]에 ADMIN_PASSWORD 를 추가하세요.
- *
- * 시트 구성 (setup 실행 시 자동 생성)
- *   예약     : 학생 예약 (장소 = 코트 1~5 / 휴식 / 배구), 예약번호, 대표 사진 링크
- *   점검기록 : 이용일별 관리 점검 (같은 날짜를 다시 저장하면 덮어씀)
- *   이용제한 : 무기한 또는 n일(등교일 기준) 이용 정지 학생
- *   휴관일   : 관리자가 체육관을 닫은 날짜 (예약을 받지 않음)
- *   설정     : 공지사항(종류=공지, C열 작은 바/긴 바)과 휴식 최대 인원(종류=휴식정원)
- *
- * 예약 기간
- *   - 매주 일요일 오후 5시에 다음 주 월~금 예약이 열림 (예: 10/11(일) 17시 → 10/12~10/16)
- *   - 그 주 안에서 학생이 날짜를 골라 예약. 당일·지난 날짜·휴관일은 예약 불가
- *   - 토요일 ~ 일요일 오후 5시 전에는 이번 주 것만 보이므로 사실상 예약 불가
- *
- * 예약 규칙
- *   - 코트 하나에 최대 4명. 단체(2~4명)가 예약하면 그 코트는 마감, 개인은 4명까지 함께 사용
- *   - 대체육관 = 코트 1~4, 소체육관 = 코트 5
- *   - 휴식: 기본 최대 30명
- *   - 배구: 대체육관 전체(코트 1~4) 사용, 10~20명. 먼저 들어온 예약이 우선
- *       · 배구가 먼저 → 코트 1~4 예약 불가
- *       · 코트 1~4에 예약이 하나라도 먼저 → 배구 예약 불가
- *   - 예약번호: 일반 01~99, 배구 100~120 (날짜마다 겹치지 않게 무작위)
- *   - 조회·취소·인원 수정은 학번 + 이름 + 예약번호가 모두 맞아야 가능
- *   - 관리자가 취소할 때는 사유 필수 → 학생이 [내 예약 확인]에서 사유를 볼 수 있음
- *   - 휴관으로 취소된 예약의 사유: '체육관 개방하지 않음'
+ * Firebase Firestore + Google Drive reservation server.
+ * Deploy once as a Google Apps Script web app, executing as the owner.
+ * Add appsscript.json, then run setup().
+ * The original field order is kept to preserve reservation rules and responses.
  */
 
 const CONFIG = {
@@ -91,17 +63,12 @@ const DEFAULT_NOTICES = [
    최초 1회 실행: 편집기 상단에서 함수 'setup' 선택 → 실행
    ========================================================= */
 function setup() {
-  const ss = SpreadsheetApp.getActive();
-  ss.setSpreadsheetTimeZone(CONFIG.TIMEZONE);
-  sheet_(CONFIG.SHEET_RESERVE, HEADERS.reserve);
-  sheet_(CONFIG.SHEET_INSPECTION, HEADERS.inspection);
-  sheet_(CONFIG.SHEET_BAN, HEADERS.ban);
-  sheet_(CONFIG.SHEET_CLOSED, HEADERS.closed);
-  const s = sheet_(CONFIG.SHEET_SETTINGS, HEADERS.settings);
-  if (s.getLastRow() < 2) writeSettings_(DEFAULT_NOTICES, CONFIG.DEFAULT_REST_CAPACITY);
+  const props = PropertiesService.getScriptProperties();
+  if (!props.getProperty('ADMIN_PASSWORD')) props.setProperty('ADMIN_PASSWORD', '0108');
   const folder = photoFolder_();
-  Logger.log('준비 완료! 사진 폴더: ' + folder.getUrl());
-  if (!adminPassword_()) Logger.log('⚠ 관리자 비밀번호가 아직 없습니다. [프로젝트 설정 > 스크립트 속성]에 ADMIN_PASSWORD 를 추가하세요.');
+  const result = route_({ action: 'public' });
+  if (!result.ok) throw new Error(result.error);
+  Logger.log('Firestore 연결 완료. 사진 폴더: ' + folder.getUrl());
 }
 
 /* ---------- 웹 앱 진입점 ---------- */
@@ -132,7 +99,10 @@ function doPost(e) {
 }
 
 function route_(p) {
+  const lock = LockService.getScriptLock();
   try {
+    lock.waitLock(30000);
+    beginStore_();
     const handlers = {
       public: handlePublic_, checkBan: handleCheckBan_, reserve: handleReserve_,
       lookup: handleLookup_, cancel: handleCancel_, updateMembers: handleUpdateMembers_,
@@ -140,11 +110,15 @@ function route_(p) {
       saveSettings: handleSaveSettings_, addBan: handleAddBan_, liftBan: handleLiftBan_, setClosed: handleSetClosed_
     };
     const fn = handlers[p && p.action];
-    if (!fn) throw new Error('알 수 없는 요청입니다.');
-    return fn(p);
+    if (!Object.prototype.hasOwnProperty.call(handlers, p && p.action)) throw new Error('알 수 없는 요청입니다.');
+    const result = fn(p);
+    commitStore_();
+    return result;
   } catch (err) {
-    console.error(err);
     return { ok: false, error: errMsg_(err) };
+  } finally {
+    storeRequest_ = null;
+    lock.releaseLock();
   }
 }
 
@@ -333,10 +307,12 @@ function handleReserve_(p) {
   checkBans_(members, target);
 
   // 사진 업로드는 잠금 밖에서 (동시 접속 대기 최소화) — 예약이 거절되면 지움
-  const photo = savePhoto_(p.photo, target, members[0]);
+  let photo = null;
   try {
     return withLock_(function () {
-      if (readClosed_()[target]) throw new Error(fmtKo_(target) + '은 체육관을 열지 않습니다.');
+      const error = dateError_(target, openWeek_(), readClosed_());
+      if (error) throw new Error(error);
+      checkBans_(members, target);
       const all = readReservations_(false);
       const active = all.filter(function (r) { return r.date === target && r.status === '예약'; });
       members.forEach(function (m) {
@@ -346,6 +322,7 @@ function handleReserve_(p) {
       const err = placeError_(p.place, p.type, members.length, occupancy_(active), readSettings_().restCapacity);
       if (err) throw new Error(err);
 
+      photo = savePhoto_(p.photo, target, members[0]);
       const code = newCode_(all, target, p.place === VOLLEY);
       const created = stamp_();
       appendText_(sheet_(CONFIG.SHEET_RESERVE, HEADERS.reserve), [
@@ -355,7 +332,7 @@ function handleReserve_(p) {
       return { ok: true, reservation: { key: target + '#' + code, code: code, createdAt: created, date: target, place: p.place, type: p.type, members: members, status: '예약', updatedAt: '' } };
     });
   } catch (err) {
-    try { DriveApp.getFileById(photo.id).setTrashed(true); } catch (e) { /* 무시 */ }
+    try { if (photo) DriveApp.getFileById(photo.id).setTrashed(true); } catch (e) { /* 무시 */ }
     throw err;
   }
 }
@@ -386,6 +363,7 @@ function checkImage_(dataUrl, maxChars, label) {
 function savePhoto_(dataUrl, date, rep) {
   const s = checkImage_(dataUrl, 3 * 1024 * 1024, '사진');
   const bytes = Utilities.base64Decode(s.split(',')[1]);
+  if ((bytes[0] & 255) !== 255 || (bytes[1] & 255) !== 216) throw new Error('JPEG 사진을 다시 촬영하세요.');
   const fileName = date.replace(/-/g, '') + '_' + rep.id + '_' + rep.name.replace(/[\\/:*?"<>|]/g, '') + '_' + Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'HHmmss') + '.jpg';
   // 파일은 비공개로 저장됩니다 (스프레드시트 소유자만 열람 가능)
   const file = photoFolder_().createFile(Utilities.newBlob(bytes, 'image/jpeg', fileName));
@@ -393,15 +371,7 @@ function savePhoto_(dataUrl, date, rep) {
 }
 
 function photoFolder_() {
-  const props = PropertiesService.getScriptProperties();
-  const id = props.getProperty('PHOTO_FOLDER_ID');
-  if (id) {
-    try { const f = DriveApp.getFolderById(id); if (!f.isTrashed()) return f; } catch (e) { /* 새로 만듦 */ }
-  }
-  const it = DriveApp.getFoldersByName(CONFIG.PHOTO_FOLDER_NAME);
-  const folder = it.hasNext() ? it.next() : DriveApp.createFolder(CONFIG.PHOTO_FOLDER_NAME);
-  props.setProperty('PHOTO_FOLDER_ID', folder.getId());
-  return folder;
+  return DriveApp.getFolderById('1p_ZujlcdwI_xyzIU75RxX74HXuqpfsS6');
 }
 
 /* ---------- 학생: 내 예약 (학번 + 이름 + 예약번호) ---------- */
@@ -461,9 +431,9 @@ function handleUpdateMembers_(p) {
       if (members.length > left) throw new Error('휴식 자리가 ' + left + '명 남아 ' + members.length + '명으로 바꿀 수 없습니다.');
     }
     const sh = sheet_(CONFIG.SHEET_RESERVE, HEADERS.reserve);
-    sh.getRange(r.row, RC.COUNT + 1, 1, 6).setNumberFormat('@').setValues([[
+    patchRow_(sh, r.row, RC.COUNT, [
       String(members.length), members[0].id, safe_(members[0].name), safe_(othersText_(members)), '예약', stamp_()
-    ]]);
+    ]);
     return { ok: true, members: members };
   });
 }
@@ -524,7 +494,7 @@ function handleSetClosed_(p) {
     const cur = rows.filter(function (x) { return x.date === date && x.status === '적용'; })[0];
     if (!p.closed) {
       if (!cur) throw new Error('이 날은 이미 열려 있습니다.');
-      sh.getRange(cur.row, 4, 1, 2).setNumberFormat('@').setValues([['해제', stamp_()]]);
+      patchRow_(sh, cur.row, 3, ['해제', stamp_()]);
       return { ok: true, closed: false };
     }
     if (cur) throw new Error('이 날은 이미 닫혀 있습니다.');
@@ -540,9 +510,9 @@ function handleSetClosed_(p) {
 }
 
 function readClosedRows_() {
-  const sh = SpreadsheetApp.getActive().getSheetByName(CONFIG.SHEET_CLOSED);
-  if (!sh || sh.getLastRow() < 2) return [];
-  return sh.getRange(2, 1, sh.getLastRow() - 1, HEADERS.closed.length).getValues().map(function (v, i) {
+  const sh = sheet_(CONFIG.SHEET_CLOSED);
+  if (tableRows_(sh).length < 2) return [];
+  return tableRows_(sh).slice(1).map(function (v, i) {
     return { row: i + 2, date: cellDate_(v[0]), memo: cellText_(v[1]), createdAt: cellStamp_(v[2]), status: cellText_(v[3]) || '적용' };
   }).filter(function (x) { return x.date; });
 }
@@ -576,14 +546,13 @@ function handleInspection_(p) {
   withLock_(function () {
     const sh = sheet_(CONFIG.SHEET_INSPECTION, HEADERS.inspection);
     let target = 0;
-    if (sh.getLastRow() > 1) {
-      const dates = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues();
+    if (tableRows_(sh).length > 1) {
+      const dates = tableRows_(sh).slice(1);
       for (let i = 0; i < dates.length; i++) if (cellDate_(dates[i][0]) === date) { target = i + 2; break; }
     }
     if (target) writeText_(sh, target, row);
     else target = appendText_(sh, row);
-    const colors = isBad.concat([bad > 0]).map(function (b) { return b ? '#FFEEEE' : '#E6F8EF'; });
-    sh.getRange(target, 4, 1, colors.length).setBackgrounds([colors]);
+
   });
   return { ok: true };
 }
@@ -632,15 +601,15 @@ function handleLiftBan_(p) {
   return withLock_(function () {
     const b = readBans_().filter(function (x) { return x.id === String(p.banId || ''); })[0];
     if (!b || b.status !== '적용') throw new Error('이미 해제되었거나 없는 제한입니다.');
-    sheet_(CONFIG.SHEET_BAN, HEADERS.ban).getRange(b.row, BC.STATUS + 1, 1, 2).setNumberFormat('@').setValues([['해제', stamp_()]]);
+    patchRow_(CONFIG.SHEET_BAN, b.row, BC.STATUS, ['해제', stamp_()]);
     return { ok: true };
   });
 }
 
 function readBans_() {
-  const sh = SpreadsheetApp.getActive().getSheetByName(CONFIG.SHEET_BAN);
-  if (!sh || sh.getLastRow() < 2) return [];
-  return sh.getRange(2, 1, sh.getLastRow() - 1, HEADERS.ban.length).getValues().map(function (v, i) {
+  const sh = sheet_(CONFIG.SHEET_BAN);
+  if (tableRows_(sh).length < 2) return [];
+  return tableRows_(sh).slice(1).map(function (v, i) {
     return {
       row: i + 2, id: cellText_(v[BC.ID]), studentId: cellText_(v[BC.SID]), name: cellText_(v[BC.NAME]),
       kind: cellText_(v[BC.KIND]) === '무기한' ? '무기한' : '기간', start: cellDate_(v[BC.START]), end: cellDate_(v[BC.END]),
@@ -661,7 +630,7 @@ function banMessage_(b) {
   return b.days + '일간 체육관을 이용할 수 없는 학생이에요 (' + fmtKo_(b.end) + '까지)';
 }
 
-/* ---------- 시트 읽기·쓰기 ---------- */
+/* ---------- Firestore 기록 읽기·쓰기 (기존 필드 순서 유지) ---------- */
 // '함께하는 학생' 열: "30102 김철수, 30103 이영희"
 function othersText_(members) {
   return members.slice(1).map(function (m) { return m.id + ' ' + m.name; }).join(', ');
@@ -674,10 +643,10 @@ function parseOthers_(s) {
 }
 
 function readReservations_(withPhoto) {
-  const sh = SpreadsheetApp.getActive().getSheetByName(CONFIG.SHEET_RESERVE);
-  if (!sh || sh.getLastRow() < 2) return [];
+  const sh = sheet_(CONFIG.SHEET_RESERVE);
+  if (tableRows_(sh).length < 2) return [];
   const width = withPhoto ? HEADERS.reserve.length : RC.REASON + 1;
-  const values = sh.getRange(2, 1, sh.getLastRow() - 1, width).getValues();
+  const values = tableRows_(sh).slice(1).map(function (row) { return row.slice(0, width); });
   const out = [];
   values.forEach(function (v, i) {
     const code = normCode_(cellText_(v[RC.CODE]));
@@ -711,16 +680,14 @@ function findReservation_(key) {
 }
 
 function setStatus_(row, status, reason) {
-  const sh = sheet_(CONFIG.SHEET_RESERVE, HEADERS.reserve);
-  sh.getRange(row, RC.STATUS + 1, 1, 3).setNumberFormat('@').setValues([[status, stamp_(), safe_(reason || '')]]);
-  if (status !== '예약') sh.getRange(row, 1, 1, RC.REASON + 1).setFontColor('#9AA1AA');
+  patchRow_(CONFIG.SHEET_RESERVE, row, RC.STATUS, [status, stamp_(), safe_(reason || '')]);
 }
 
 function readInspections_() {
-  const sh = SpreadsheetApp.getActive().getSheetByName(CONFIG.SHEET_INSPECTION);
+  const sh = sheet_(CONFIG.SHEET_INSPECTION);
   const out = {};
-  if (!sh || sh.getLastRow() < 2) return out;
-  sh.getRange(2, 1, sh.getLastRow() - 1, HEADERS.inspection.length).getValues().forEach(function (v) {
+  if (tableRows_(sh).length < 2) return out;
+  tableRows_(sh).slice(1).forEach(function (v) {
     const d = cellDate_(v[0]);
     if (!d) return;
     const items = {};
@@ -731,9 +698,9 @@ function readInspections_() {
 }
 
 function readSettings_() {
-  const sh = SpreadsheetApp.getActive().getSheetByName(CONFIG.SHEET_SETTINGS);
-  if (!sh || sh.getLastRow() < 2) return { notices: normNotices_(DEFAULT_NOTICES), restCapacity: CONFIG.DEFAULT_REST_CAPACITY };
-  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 3).getValues();
+  const sh = sheet_(CONFIG.SHEET_SETTINGS);
+  if (tableRows_(sh).length < 2) return { notices: normNotices_(DEFAULT_NOTICES), restCapacity: CONFIG.DEFAULT_REST_CAPACITY };
+  const rows = tableRows_(sh).slice(1);
   const notices = [];
   let restCapacity = CONFIG.DEFAULT_REST_CAPACITY;
   rows.forEach(function (r) {
@@ -746,12 +713,12 @@ function readSettings_() {
 }
 
 function writeSettings_(notices, restCapacity) {
-  const sh = sheet_(CONFIG.SHEET_SETTINGS, HEADERS.settings);
-  if (sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, Math.max(sh.getLastColumn(), 3)).clearContent();
+  const name = CONFIG.SHEET_SETTINGS;
   const rows = [['휴식정원', String(restCapacity), '휴식 최대 인원']]
     .concat(notices.map(function (n) { return ['공지', safe_(n.text), SIZE_LABEL[n.size]]; }));
-  sh.getRange(2, 1, rows.length, 3).setNumberFormat('@').setValues(rows);
-  sh.getRange(2, 2, rows.length, 1).setWrap(true);
+  const previous = tableRows_(name).length;
+  rows.forEach(function (row, i) { writeText_(name, i + 2, row); });
+  for (let row = rows.length + 2; row <= previous; row++) writeText_(name, row, ['', '', '']);
 }
 
 function normNotices_(list) {
@@ -777,42 +744,33 @@ function fmtKo_(s) { const d = utc_(s); return (d.getUTCMonth() + 1) + '월 ' + 
 // 셀 값을 문자열로 통일 (시트가 날짜·숫자로 자동 변환해도 안전하게)
 function cellText_(v) { return v === null || v === undefined ? '' : String(v).trim(); }
 function cellDate_(v) {
-  if (v instanceof Date) return Utilities.formatDate(v, SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 'yyyy-MM-dd');
+  if (v instanceof Date) return Utilities.formatDate(v, CONFIG.TIMEZONE, 'yyyy-MM-dd');
   return cellText_(v).slice(0, 10);
 }
 function cellStamp_(v) {
-  if (v instanceof Date) return Utilities.formatDate(v, SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 'yyyy-MM-dd HH:mm');
+  if (v instanceof Date) return Utilities.formatDate(v, CONFIG.TIMEZONE, 'yyyy-MM-dd HH:mm');
   return cellText_(v);
 }
 
 /* ---------- 유틸 ---------- */
-function sheet_(name, headers) {
-  const ss = SpreadsheetApp.getActive();
-  const sh = ss.getSheetByName(name) || ss.insertSheet(name);
-  if (sh.getLastRow() === 0) {
-    sh.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold').setBackground('#F2F4F6');
-    sh.setFrozenRows(1);
-  }
-  return sh;
-}
+function sheet_(name) { return name; }
 
 // 모든 값을 '텍스트 서식'으로 기록 → 날짜·학번·예약번호(01)가 숫자로 바뀌지 않음
-function appendText_(sh, row) {
-  const r = sh.getLastRow() + 1;
-  if (r > sh.getMaxRows()) sh.insertRowsAfter(sh.getMaxRows(), 100);
-  writeText_(sh, r, row);
-  return r;
+function appendText_(name, row) {
+  const index = tableRows_(name).length + 1;
+  writeText_(name, index, row);
+  return index;
 }
-function writeText_(sh, r, row) {
-  sh.getRange(r, 1, 1, row.length)
-    .setNumberFormat('@')
-    .setValues([row.map(function (v) { return v === null || v === undefined ? '' : String(v); })]);
+function writeText_(name, index, values) {
+  const rows = tableRows_(name);
+  rows[index - 1] = values.map(function (value) { return value == null ? '' : String(value); });
+  storeRequest_.dirty[name + '/' + index] = rows[index - 1];
 }
 
 function people_(list) { return list.reduce(function (n, r) { return n + r.members.length; }, 0); }
 
 function checkDate_(date) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('날짜 형식이 올바르지 않습니다.');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || isNaN(utc_(date).getTime()) || addDays_(date, 0) !== date) throw new Error('날짜 형식이 올바르지 않습니다.');
 }
 
 // 비밀번호는 [프로젝트 설정 > 스크립트 속성]의 ADMIN_PASSWORD (코드·GitHub에는 없음)
@@ -829,16 +787,103 @@ function checkPassword_(input) {
   }
 }
 
-function withLock_(fn) {
-  const lock = LockService.getScriptLock();
-  lock.waitLock(15000);
-  try { return fn(); } finally { lock.releaseLock(); }
-}
+function withLock_(fn) { return fn(); }
 
 // 학생이 '=' 등으로 시작하는 값을 넣어 수식이 실행되는 것을 막음 (읽을 때는 앞의 ' 가 자동으로 빠짐)
-function safe_(v) { return (typeof v === 'string' && /^[=+\-@]/.test(v)) ? "'" + v : v; }
+function safe_(v) { return v; } // Firestore stores strings without evaluating spreadsheet formulas.
 
 function errMsg_(err) { return (err && err.message) ? err.message : String(err); }
 function json_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Firestore persistence for the existing reservation field layout.
+ * Each row is a separate private document. All changed rows and a revision
+ * precondition are committed together so partial updates never become visible.
+ * Google Apps Script executes as the project owner with the datastore scope.
+ */
+const FIRESTORE_PROJECT = 'naeson-gym-reservation-fa397';
+const FIRESTORE_DATABASE = 'projects/' + FIRESTORE_PROJECT + '/databases/(default)';
+const FIRESTORE_ROOT = 'https://firestore.googleapis.com/v1/' + FIRESTORE_DATABASE;
+const TABLE_COLLECTIONS = {
+  '예약': 'reservations', '점검기록': 'inspections',
+  '이용제한': 'bans', '휴관일': 'closures', '설정': 'settings'
+};
+let storeRequest_ = null;
+
+function firestoreRequest_(method, path, body, allowMissing) {
+  const response = UrlFetchApp.fetch(FIRESTORE_ROOT + path, {
+    method: method,
+    headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() },
+    contentType: 'application/json',
+    payload: body === undefined ? undefined : JSON.stringify(body),
+    muteHttpExceptions: true
+  });
+  const code = response.getResponseCode();
+  if (allowMissing && code === 404) return null;
+  const data = JSON.parse(response.getContentText() || '{}');
+  if (code < 200 || code >= 300) {
+    if (code === 409 || code === 412) throw new Error('다른 요청이 먼저 저장되었습니다. 현황을 새로 불러온 뒤 다시 시도하세요.');
+    // Do not return tokens or the raw Google response to students.
+    throw new Error('Firestore 저장소 연결 오류 (' + code + '). 관리자에게 문의하세요.');
+  }
+  return data;
+}
+
+function beginStore_() {
+  const revision = firestoreRequest_('get', '/documents/internal/revision', undefined, true);
+  storeRequest_ = { tables: {}, dirty: {}, revision: revision ? revision.updateTime : null };
+}
+
+function tableRows_(name) {
+  if (!storeRequest_) throw new Error('서버 요청이 시작되지 않았습니다.');
+  const collection = TABLE_COLLECTIONS[name];
+  if (!collection) throw new Error('알 수 없는 기록 종류입니다.');
+  if (storeRequest_.tables[name]) return storeRequest_.tables[name];
+  const rows = [[]]; // Row 1 remains reserved for the legacy column headings.
+  let pageToken = '';
+  do {
+    const page = firestoreRequest_('get', '/documents/' + collection + '?pageSize=100' +
+      (pageToken ? '&pageToken=' + encodeURIComponent(pageToken) : ''));
+    (page.documents || []).forEach(function (document) {
+      const row = Number(document.name.split('/').pop());
+      if (!Number.isInteger(row) || row < 2) return;
+      const values = (((document.fields || {}).cells || {}).arrayValue || {}).values || [];
+      rows[row - 1] = values.map(function (value) { return value.stringValue || ''; });
+    });
+    pageToken = page.nextPageToken || '';
+  } while (pageToken);
+  for (let i = 1; i < rows.length; i++) if (!rows[i]) rows[i] = [];
+  storeRequest_.tables[name] = rows;
+  return rows;
+}
+
+function patchRow_(name, index, column, values) {
+  const row = (tableRows_(name)[index - 1] || []).slice();
+  values.forEach(function (value, i) { row[column + i] = value; });
+  writeText_(name, index, row);
+}
+
+function commitStore_() {
+  const keys = Object.keys(storeRequest_.dirty);
+  if (!keys.length) return;
+  const writes = keys.map(function (key) {
+    const split = key.lastIndexOf('/');
+    const table = key.slice(0, split), row = key.slice(split + 1);
+    return { update: {
+      name: FIRESTORE_DATABASE + '/documents/' + TABLE_COLLECTIONS[table] + '/' + row,
+      fields: { cells: { arrayValue: { values: storeRequest_.dirty[key].map(function (value) {
+        return { stringValue: String(value == null ? '' : value) };
+      }) } } }
+    } };
+  });
+  if (writes.length > 499) throw new Error('한 번에 변경할 수 있는 기록 수를 초과했습니다. 관리자에게 문의하세요.');
+  writes.push({
+    update: { name: FIRESTORE_DATABASE + '/documents/internal/revision', fields: {
+      changedAt: { timestampValue: new Date().toISOString() }
+    } },
+    currentDocument: storeRequest_.revision ? { updateTime: storeRequest_.revision } : { exists: false }
+  });
+  firestoreRequest_('post', '/documents:commit', { writes: writes });
 }
