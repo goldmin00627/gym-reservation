@@ -883,7 +883,19 @@ function demoDateError(db, date) {
 }
 const activeOn = (db, date) => db.reservations.filter((r) => r.date === date && r.status === '예약');
 const peopleOf = (list) => list.reduce((n, r) => n + r.members.length, 0);
-function demoCheckPw(p) { if (String(p.password || '') !== DEMO_PASSWORD) throw new Error('비밀번호가 올바르지 않습니다.'); }
+function demoCheckPw(p) {
+  const key = 'gym.demo.adminLogin';
+  const saved = store.get(key) || { failures: 0, lockedUntil: 0 };
+  const now = Date.now();
+  if (saved.lockedUntil > now) throw new Error(`관리자 접근이 잠겨 있습니다. ${Math.ceil((saved.lockedUntil - now) / 60000)}분 후 다시 시도하세요.`);
+  if (saved.lockedUntil) saved.failures = 0;
+  if (String(p.password || '') === DEMO_PASSWORD) { store.del(key); return; }
+  const failures = saved.failures + 1;
+  const lockedUntil = failures >= 3 ? now + 10 * 60000 : 0;
+  store.set(key, { failures, lockedUntil });
+  if (lockedUntil) throw new Error('비밀번호를 3회 연속 틀려 관리자 접근이 10분 동안 잠겼습니다.');
+  throw new Error(`비밀번호가 올바르지 않습니다. ${3 - failures}회 더 틀리면 10분 동안 잠깁니다.`);
+}
 const stripPhoto = ({ thumb, photoUrl, ...rest }) => rest;
 function demoFind(db, key) {
   const list = db.reservations.filter((r) => r.key === key);

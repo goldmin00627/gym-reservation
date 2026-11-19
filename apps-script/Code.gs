@@ -281,7 +281,7 @@ function handlePublic_() {
       occupancy: occupancy_(all.filter(function (r) { return r.date === d; }))
     };
   });
-  return { ok: true, today: week.today, days: days, nextOpen: week.nextOpenLabel, restCapacity: settings.restCapacity, notices: settings.notices, schoolLevels: true };
+  return { ok: true, today: week.today, days: days, nextOpen: week.nextOpenLabel, restCapacity: settings.restCapacity, notices: settings.notices, schoolLevels: true, adminLockout: true };
 }
 
 /* ---------- 학생: 이용 제한 확인 ---------- */
@@ -786,13 +786,29 @@ function adminPassword_() {
   return String(PropertiesService.getScriptProperties().getProperty('ADMIN_PASSWORD') || '').trim();
 }
 
+// route_ holds the script lock across this read/modify/write operation.
+// Store one JSON property so attempts survive reloads and apply to every client.
 function checkPassword_(input) {
+  const props = PropertiesService.getScriptProperties();
   const pw = adminPassword_();
-  if (!pw) throw new Error('관리자 비밀번호가 설정되지 않았습니다. Apps Script [프로젝트 설정 > 스크립트 속성]에 ADMIN_PASSWORD 를 추가하세요.');
-  if (String(input || '') !== pw) {
-    Utilities.sleep(1000); // 비밀번호를 마구 넣어 보는 것을 느리게
-    throw new Error('비밀번호가 올바르지 않습니다.');
+  if (!pw) throw new Error('관리자 비밀번호가 설정되지 않았습니다.');
+  const key = 'ADMIN_LOGIN_STATE';
+  const state = JSON.parse(props.getProperty(key) || '{"failures":0,"lockedUntil":0}');
+  const now = new Date().getTime();
+  if (state.lockedUntil > now) {
+    const minutes = Math.ceil((state.lockedUntil - now) / 60000);
+    throw new Error('관리자 접근이 잠겨 있습니다. ' + minutes + '분 후 다시 시도하세요.');
   }
+  if (state.lockedUntil) state.failures = 0;
+  if (String(input || '') === pw) {
+    if (state.failures || state.lockedUntil) props.setProperty(key, '{"failures":0,"lockedUntil":0}');
+    return;
+  }
+  const failures = (Number(state.failures) || 0) + 1;
+  const lockedUntil = failures >= 3 ? now + 10 * 60000 : 0;
+  props.setProperty(key, JSON.stringify({ failures: failures, lockedUntil: lockedUntil }));
+  if (lockedUntil) throw new Error('비밀번호를 3회 연속 틀려 관리자 접근이 10분 동안 잠겼습니다.');
+  throw new Error('비밀번호가 올바르지 않습니다. ' + (3 - failures) + '회 더 틀리면 10분 동안 잠깁니다.');
 }
 
 function withLock_(fn) { return fn(); }

@@ -9,8 +9,9 @@ let uploads = 0;
 let rejectCommit = false;
 const props = new Map([['ADMIN_PASSWORD', '0108']]);
 const clone = value => JSON.parse(JSON.stringify(value));
+let clockNow = '2026-11-19T08:00:00Z';
 class Clock extends Date {
-  constructor(...args) { super(...(args.length ? args : ['2026-11-19T08:00:00Z'])); }
+  constructor(...args) { super(...(args.length ? args : [clockNow])); }
 }
 function context() {
   const c = vm.createContext({
@@ -111,3 +112,23 @@ assert.equal(b.route_({action:'checkBan',studentId:'30101',school:'고',date:req
 assert.equal(b.route_({action:'checkBan',studentId:'30101',school:'중',date:request.date}).banned,false);
 assert.equal(b.route_({action:'admin',password:'0108',date:request.date,dates:[]}).day.reservations.find(r=>r.key===first.reservation.key).status,'예약');
 console.log('PASS middle/high identity separation, mixed groups, persisted school, school-specific lookup and bans');
+
+props.delete('ADMIN_LOGIN_STATE');
+assert.match(a.route_({action:'login',password:'bad'}).error,/2회/);
+assert.match(b.route_({action:'login',password:'bad'}).error,/1회/);
+assert.match(a.route_({action:'login',password:'bad'}).error,/3회 연속/);
+const locked = props.get('ADMIN_LOGIN_STATE');
+assert.equal(b.route_({action:'login',password:'0108'}).ok,false);
+assert.equal(b.route_({action:'admin',password:'0108',date:request.date,dates:[]}).ok,false);
+assert.equal(b.route_({action:'saveSettings',password:'0108',restCapacity:0,notices:[]}).ok,false);
+assert.equal(b.route_({action:'public'}).ok,true);
+assert.equal(props.get('ADMIN_LOGIN_STATE'),locked,'blocked requests must not extend lock');
+clockNow = '2026-11-19T08:09:59.999Z';
+assert.equal(a.route_({action:'login',password:'0108'}).ok,false);
+clockNow = '2026-11-19T08:10:00Z';
+assert.equal(a.route_({action:'login',password:'0108'}).ok,true);
+assert.equal(JSON.parse(props.get('ADMIN_LOGIN_STATE')).failures,0);
+assert.equal(a.route_({action:'login',password:'bad'}).ok,false);
+assert.equal(a.route_({action:'login',password:'0108'}).ok,true);
+assert.match(b.route_({action:'login',password:'bad'}).error,/2회/);
+console.log('PASS three failures lock every admin endpoint across clients, student access, no lock extension, exact expiry and success reset');
