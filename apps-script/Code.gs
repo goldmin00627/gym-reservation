@@ -228,8 +228,60 @@ function openWeek_() {
 }
 
 // 날짜가 예약 가능한지 — 불가능하면 이유
+// 대한민국 공휴일 및 대체공휴일, 2026–2027. 임시공휴일 추가 지정 시 갱신 필요.
+// https://astro.kasi.re.kr/life/post/calendarData?year=2026
+// https://astro.kasi.re.kr/life/post/calendarData?year=2027
+const PUBLIC_HOLIDAYS = {
+  "2026-01-01": "신정",
+  "2026-02-16": "설날 연휴",
+  "2026-02-17": "설날 연휴",
+  "2026-02-18": "설날 연휴",
+  "2026-03-01": "삼일절",
+  "2026-03-02": "대체공휴일(삼일절)",
+  "2026-05-05": "어린이날",
+  "2026-05-24": "부처님오신날",
+  "2026-05-25": "대체공휴일(부처님오신날)",
+  "2026-06-03": "전국동시지방선거",
+  "2026-06-06": "현충일",
+  "2026-07-17": "제헌절",
+  "2026-08-15": "광복절",
+  "2026-08-17": "대체공휴일(광복절)",
+  "2026-09-24": "추석 연휴",
+  "2026-09-25": "추석 연휴",
+  "2026-09-26": "추석 연휴",
+  "2026-10-03": "개천절",
+  "2026-10-05": "대체공휴일(개천절)",
+  "2026-10-09": "한글날",
+  "2026-12-25": "성탄절",
+  "2027-01-01": "신정",
+  "2027-02-06": "설날 연휴",
+  "2027-02-07": "설날 연휴",
+  "2027-02-08": "설날 연휴",
+  "2027-02-09": "대체공휴일(설날)",
+  "2027-03-01": "삼일절",
+  "2027-05-01": "노동절",
+  "2027-05-03": "대체공휴일(노동절)",
+  "2027-05-05": "어린이날",
+  "2027-05-13": "부처님오신날",
+  "2027-06-06": "현충일",
+  "2027-07-17": "제헌절",
+  "2027-07-19": "대체공휴일(제헌절)",
+  "2027-08-15": "광복절",
+  "2027-08-16": "대체공휴일(광복절)",
+  "2027-09-14": "추석 연휴",
+  "2027-09-15": "추석 연휴",
+  "2027-09-16": "추석 연휴",
+  "2027-10-03": "개천절",
+  "2027-10-04": "대체공휴일(개천절)",
+  "2027-10-09": "한글날",
+  "2027-10-11": "대체공휴일(한글날)",
+  "2027-12-25": "성탄절",
+  "2027-12-27": "대체공휴일(성탄절)"
+};
+
 function dateError_(date, week, closed) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date || ''))) return '예약할 날짜를 선택하세요.';
+  if (PUBLIC_HOLIDAYS[date]) return PUBLIC_HOLIDAYS[date] + '에는 예약할 수 없습니다.';
   if (date <= week.today) return '지난 날짜나 오늘은 예약할 수 없습니다.';
   if (week.days.indexOf(date) < 0) return '아직 예약할 수 없는 날짜입니다. 다음 주 예약은 ' + week.nextOpenLabel + '에 열립니다.';
   if (closed[date]) return fmtKo_(date) + '은 체육관을 열지 않습니다.';
@@ -244,7 +296,7 @@ function handlePublic_() {
   const all = readReservations_(false).filter(function (r) { return r.status === '예약'; });
   const days = week.days.map(function (d) {
     return {
-      date: d, past: d <= week.today, closed: !!closed[d], closedMemo: closed[d] ? closed[d].memo : '',
+      date: d, past: d <= week.today, closed: !!PUBLIC_HOLIDAYS[d] || !!closed[d], closedMemo: PUBLIC_HOLIDAYS[d] || (closed[d] ? closed[d].memo : ''),
       occupancy: occupancy_(all.filter(function (r) { return r.date === d; }))
     };
   });
