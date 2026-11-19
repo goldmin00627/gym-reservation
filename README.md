@@ -50,3 +50,9 @@ GitHub Actions의 deploy.yml은 기존 GitHub Pages 배포입니다. GitHub에 �
 - https://developers.google.com/apps-script/guides/web
 - https://astro.kasi.re.kr/life/post/calendarData?year=2026
 - https://astro.kasi.re.kr/life/post/calendarData?year=2027
+
+## 중학교·고등학교 구분
+
+각 학생에게 학교급(중/고)과 기존 5자리 학번을 함께 입력합니다. 같은 학번이어도 학교급이 다르면 별도 학생으로 예약·조회·이용 제한을 처리합니다. 기존 학교급 없는 기록은 중학교 기록으로 읽습니다. 단체 예약에는 중·고 학생을 함께 추가할 수 있습니다.
+
+이 기능을 적용하려면 새 Code.gs를 Apps Script에 저장하고 배포 관리에서 기존 웹 앱을 새 버전으로 배포해야 합니다. URL은 유지합니다. 이전 서버를 사용하는 동안 고등학교 요청은 화면에서 서버 업데이트 안내로 차단하여 학교급이 누락된 예약이 저장되는 것을 방지합니다.

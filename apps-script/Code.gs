@@ -31,15 +31,15 @@ const PLACES = COURTS.concat([REST, VOLLEY]);
 
 const HEADERS = {
   reserve: ['예약번호', '이용일', '접수일시', '장소', '구분', '인원', '대표 학번', '대표 이름', '함께하는 학생',
-            '상태', '변경일시', '취소 사유', '대표 사진', '사진 파일 ID', '썸네일(앱 표시용)'],
+            '상태', '변경일시', '취소 사유', '대표 사진', '사진 파일 ID', '썸네일(앱 표시용)', '학교급'],
   closed: ['날짜', '메모', '등록일시', '상태', '변경일시'],
   inspection: ['이용일', '점검일시', '점검자', '용구 정리', '쓰레기·청결', '안전 문제', '그 밖의 문제', '종합', '특이사항'],
-  ban: ['제한번호', '학번', '이름', '구분', '시작일', '종료일', '일수', '사유', '등록일시', '상태', '해제일시'],
+  ban: ['제한번호', '학번', '이름', '구분', '시작일', '종료일', '일수', '사유', '등록일시', '상태', '해제일시', '학교급'],
   settings: ['종류', '내용', '크기']
 };
 // 열 위치 (0부터)
-const RC = { CODE: 0, DATE: 1, CREATED: 2, PLACE: 3, TYPE: 4, COUNT: 5, REP_ID: 6, REP_NAME: 7, OTHERS: 8, STATUS: 9, UPDATED: 10, REASON: 11, PHOTO: 12, PHOTO_ID: 13, THUMB: 14 };
-const BC = { ID: 0, SID: 1, NAME: 2, KIND: 3, START: 4, END: 5, DAYS: 6, REASON: 7, CREATED: 8, STATUS: 9, LIFTED: 10 };
+const RC = { CODE: 0, DATE: 1, CREATED: 2, PLACE: 3, TYPE: 4, COUNT: 5, REP_ID: 6, REP_NAME: 7, OTHERS: 8, STATUS: 9, UPDATED: 10, REASON: 11, PHOTO: 12, PHOTO_ID: 13, THUMB: 14, SCHOOL: 15 };
+const BC = { ID: 0, SID: 1, NAME: 2, KIND: 3, START: 4, END: 5, DAYS: 6, REASON: 7, CREATED: 8, STATUS: 9, LIFTED: 10, SCHOOL: 11 };
 
 // 관리 점검 항목 — good(문제 없음) / bad(문제 있음) 답 (index.html의 INSPECT_ITEMS와 같게)
 const INSPECT_ITEMS = [
@@ -162,10 +162,17 @@ function placeError_(place, type, n, occ, restCap) {
   return '';
 }
 
+function schoolOf_(value) {
+  if (value === undefined || value === null || value === '') return '중';
+  if (value !== '중' && value !== '고') throw new Error('중학교 또는 고등학교를 선택하세요.');
+  return value;
+}
+function sameStudent_(a, b) { return a.id === b.id && schoolOf_(a.school) === schoolOf_(b.school); }
+
 function validateMembers_(type, members, place) {
   if (type !== '개인' && type !== '단체') throw new Error('예약 구분을 선택하세요.');
   const list = (Array.isArray(members) ? members : []).map(function (m) {
-    return { id: String((m && m.id) || '').trim(), name: String((m && m.name) || '').replace(/[,\n]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 20) };
+    return { school: schoolOf_(m && m.school), id: String((m && m.id) || '').trim(), name: String((m && m.name) || '').replace(/[,\n]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 20) };
   });
   if (place === VOLLEY) {
     if (type !== '단체') throw new Error('배구는 단체로만 예약할 수 있습니다.');
@@ -178,8 +185,8 @@ function validateMembers_(type, members, place) {
   list.forEach(function (m, i) {
     if (!/^\d{5}$/.test(m.id)) throw new Error((i + 1) + '번째 학생의 학번을 5자리 숫자로 입력하세요.');
     if (!m.name) throw new Error((i + 1) + '번째 학생의 이름을 입력하세요.');
-    if (seen[m.id]) throw new Error('학번 ' + m.id + '이(가) 두 번 입력되었습니다.');
-    seen[m.id] = true;
+    if (seen[schoolOf_(m.school) + ':' + m.id]) throw new Error('학번 ' + m.id + '이(가) 두 번 입력되었습니다.');
+    seen[schoolOf_(m.school) + ':' + m.id] = true;
   });
   return list;
 }
@@ -274,7 +281,7 @@ function handlePublic_() {
       occupancy: occupancy_(all.filter(function (r) { return r.date === d; }))
     };
   });
-  return { ok: true, today: week.today, days: days, nextOpen: week.nextOpenLabel, restCapacity: settings.restCapacity, notices: settings.notices };
+  return { ok: true, today: week.today, days: days, nextOpen: week.nextOpenLabel, restCapacity: settings.restCapacity, notices: settings.notices, schoolLevels: true };
 }
 
 /* ---------- 학생: 이용 제한 확인 ---------- */
@@ -282,14 +289,14 @@ function handleCheckBan_(p) {
   const id = String(p.studentId || '').trim();
   if (!/^\d{5}$/.test(id)) return { ok: true, banned: false };
   const date = /^\d{4}-\d{2}-\d{2}$/.test(String(p.date || '')) ? p.date : nextSchoolDay_(today_());
-  const ban = activeBanFor_(readBans_(), id, date);
+  const ban = activeBanFor_(readBans_(), id, date, p.school);
   return ban ? { ok: true, banned: true, message: banMessage_(ban) } : { ok: true, banned: false };
 }
 
 function checkBans_(members, date) {
   const bans = readBans_();
   members.forEach(function (m) {
-    const ban = activeBanFor_(bans, m.id, date);
+    const ban = activeBanFor_(bans, m.id, date, m.school);
     if (ban) throw new Error(m.id + ' ' + m.name + ' 학생은 ' + banMessage_(ban).replace(/학생이에요.*$/, '학생이라 예약할 수 없습니다.'));
   });
 }
@@ -316,7 +323,7 @@ function handleReserve_(p) {
       const all = readReservations_(false);
       const active = all.filter(function (r) { return r.date === target && r.status === '예약'; });
       members.forEach(function (m) {
-        const dup = active.some(function (r) { return r.members.some(function (x) { return x.id === m.id; }); });
+        const dup = active.some(function (r) { return r.members.some(function (x) { return sameStudent_(x, m); }); });
         if (dup) throw new Error(m.id + ' ' + m.name + ' 학생은 이미 ' + fmtKo_(target) + '에 예약되어 있습니다.');
       });
       const err = placeError_(p.place, p.type, members.length, occupancy_(active), readSettings_().restCapacity);
@@ -327,7 +334,7 @@ function handleReserve_(p) {
       const created = stamp_();
       appendText_(sheet_(CONFIG.SHEET_RESERVE, HEADERS.reserve), [
         code, target, created, p.place, p.type, members.length, members[0].id, safe_(members[0].name), safe_(othersText_(members)),
-        '예약', '', '', photo.url, photo.id, thumb
+        '예약', '', '', photo.url, photo.id, thumb, members[0].school
       ]);
       return { ok: true, reservation: { key: target + '#' + code, code: code, createdAt: created, date: target, place: p.place, type: p.type, members: members, status: '예약', updatedAt: '' } };
     });
@@ -364,7 +371,7 @@ function savePhoto_(dataUrl, date, rep) {
   const s = checkImage_(dataUrl, 3 * 1024 * 1024, '사진');
   const bytes = Utilities.base64Decode(s.split(',')[1]);
   if ((bytes[0] & 255) !== 255 || (bytes[1] & 255) !== 216) throw new Error('JPEG 사진을 다시 촬영하세요.');
-  const fileName = date.replace(/-/g, '') + '_' + rep.id + '_' + rep.name.replace(/[\\/:*?"<>|]/g, '') + '_' + Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'HHmmss') + '.jpg';
+  const fileName = date.replace(/-/g, '') + '_' + schoolOf_(rep.school) + '_' + rep.id + '_' + rep.name.replace(/[\\/:*?"<>|]/g, '') + '_' + Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'HHmmss') + '.jpg';
   // 파일은 비공개로 저장됩니다 (스프레드시트 소유자만 열람 가능)
   const file = photoFolder_().createFile(Utilities.newBlob(bytes, 'image/jpeg', fileName));
   return { id: file.getId(), url: file.getUrl() };
@@ -383,9 +390,9 @@ function credentials_(p) {
   const id = String(p.studentId || '').trim(), name = String(p.name || '').trim(), code = normCode_(p.code);
   if (!/^\d{5}$/.test(id) || !name) throw new Error('학번 5자리와 이름을 입력하세요.');
   if (!/^\d{2,3}$/.test(code)) throw new Error('예약번호를 입력하세요.');
-  return { id: id, name: name, code: code };
+  return { school: schoolOf_(p.school), id: id, name: name, code: code };
 }
-const isMine_ = function (r, c) { return r.code === c.code && r.members.some(function (m) { return m.id === c.id && m.name === c.name; }); };
+const isMine_ = function (r, c) { return r.code === c.code && r.members.some(function (m) { return sameStudent_(m, c) && m.name === c.name; }); };
 
 function handleLookup_(p) {
   const c = credentials_(p);
@@ -418,11 +425,11 @@ function handleUpdateMembers_(p) {
     const r = findMine_(p);
     if (r.type !== '단체') throw new Error('개인 예약은 인원을 바꿀 수 없습니다. 취소 후 다시 예약하세요.');
     const members = validateMembers_('단체', p.members, r.place);
-    if (members[0].id !== r.members[0].id) throw new Error('대표 학생은 바꿀 수 없습니다. 대표를 바꾸려면 취소 후 다시 예약하세요.');
+    if (!sameStudent_(members[0], r.members[0])) throw new Error('대표 학생은 바꿀 수 없습니다. 대표를 바꾸려면 취소 후 다시 예약하세요.');
     checkBans_(members, r.date);
     const others = readReservations_(false).filter(function (x) { return x.date === r.date && x.status === '예약' && x.key !== r.key; });
     members.forEach(function (m) {
-      if (others.some(function (x) { return x.members.some(function (y) { return y.id === m.id; }); })) {
+      if (others.some(function (x) { return x.members.some(function (y) { return sameStudent_(y, m); }); })) {
         throw new Error(m.id + ' ' + m.name + ' 학생은 이미 ' + fmtKo_(r.date) + '에 다른 예약이 있습니다.');
       }
     });
@@ -459,7 +466,7 @@ function handleAdmin_(p) {
   });
   const bans = readBans_().map(function (b) {
     const live = b.status === '적용' && (b.kind === '무기한' || b.end >= today);
-    return { id: b.id, studentId: b.studentId, name: b.name, kind: b.kind, start: b.start, end: b.end, days: b.days, reason: b.reason, createdAt: b.createdAt, status: live ? '적용' : (b.status === '해제' ? '해제' : '만료'), liftedAt: b.liftedAt };
+    return { school: schoolOf_(b.school), id: b.id, studentId: b.studentId, name: b.name, kind: b.kind, start: b.start, end: b.end, days: b.days, reason: b.reason, createdAt: b.createdAt, status: live ? '적용' : (b.status === '해제' ? '해제' : '만료'), liftedAt: b.liftedAt };
   });
   return {
     ok: true, restCapacity: settings.restCapacity, notices: settings.notices,
@@ -580,15 +587,15 @@ function handleAddBan_(p) {
   const reason = String(p.reason || '').trim().slice(0, 200);
 
   return withLock_(function () {
-    if (activeBanFor_(readBans_(), sid, start)) throw new Error(sid + ' ' + name + ' 학생은 이미 이용 제한 중입니다. 기존 제한을 해제한 뒤 다시 등록하세요.');
+    if (activeBanFor_(readBans_(), sid, start, p.school)) throw new Error(sid + ' ' + name + ' 학생은 이미 이용 제한 중입니다. 기존 제한을 해제한 뒤 다시 등록하세요.');
     const id = 'B' + Utilities.getUuid().replace(/-/g, '').slice(0, 5).toUpperCase();
-    appendText_(sheet_(CONFIG.SHEET_BAN, HEADERS.ban), [id, sid, safe_(name), kind, start, end, days, safe_(reason), stamp_(), '적용', '']);
+    appendText_(sheet_(CONFIG.SHEET_BAN, HEADERS.ban), [id, sid, safe_(name), kind, start, end, days, safe_(reason), stamp_(), '적용', '', schoolOf_(p.school)]);
 
     // 제한 기간에 걸린 기존 예약 자동 취소 (단체 예약이면 그 예약 전체)
     let canceled = 0;
     readReservations_(false).forEach(function (r) {
       if (r.status !== '예약' || r.date < start || (end && r.date > end)) return;
-      if (!r.members.some(function (m) { return m.id === sid; })) return;
+      if (!r.members.some(function (m) { return m.id === sid && schoolOf_(m.school) === schoolOf_(p.school); })) return;
       setStatus_(r.row, '이용 제한 취소', '체육관 이용이 제한된 학생이 포함되어 취소되었습니다.');
       canceled++;
     });
@@ -611,7 +618,7 @@ function readBans_() {
   if (tableRows_(sh).length < 2) return [];
   return tableRows_(sh).slice(1).map(function (v, i) {
     return {
-      row: i + 2, id: cellText_(v[BC.ID]), studentId: cellText_(v[BC.SID]), name: cellText_(v[BC.NAME]),
+      row: i + 2, school: schoolOf_(cellText_(v[BC.SCHOOL])), id: cellText_(v[BC.ID]), studentId: cellText_(v[BC.SID]), name: cellText_(v[BC.NAME]),
       kind: cellText_(v[BC.KIND]) === '무기한' ? '무기한' : '기간', start: cellDate_(v[BC.START]), end: cellDate_(v[BC.END]),
       days: Number(cellText_(v[BC.DAYS])) || 0, reason: cellText_(v[BC.REASON]), createdAt: cellStamp_(v[BC.CREATED]),
       status: cellText_(v[BC.STATUS]) || '적용', liftedAt: cellStamp_(v[BC.LIFTED])
@@ -619,9 +626,9 @@ function readBans_() {
   }).filter(function (b) { return b.id && b.studentId; });
 }
 
-function activeBanFor_(bans, sid, date) {
+function activeBanFor_(bans, sid, date, school) {
   return bans.filter(function (b) {
-    return b.status === '적용' && b.studentId === sid && (b.kind === '무기한' || (b.start <= date && date <= b.end));
+    return b.status === '적용' && b.studentId === sid && schoolOf_(b.school) === schoolOf_(school) && (b.kind === '무기한' || (b.start <= date && date <= b.end));
   })[0] || null;
 }
 
@@ -633,9 +640,10 @@ function banMessage_(b) {
 /* ---------- Firestore 기록 읽기·쓰기 (기존 필드 순서 유지) ---------- */
 // '함께하는 학생' 열: "30102 김철수, 30103 이영희"
 function othersText_(members) {
-  return members.slice(1).map(function (m) { return m.id + ' ' + m.name; }).join(', ');
+  return JSON.stringify(members.slice(1));
 }
 function parseOthers_(s) {
+  if (String(s).trim().charAt(0) === '[') return JSON.parse(s).map(function (m) { return { school: schoolOf_(m.school), id: String(m.id), name: String(m.name) }; });
   return String(s || '').split(',').map(function (x) { return x.trim(); }).filter(Boolean).map(function (x) {
     const i = x.indexOf(' ');
     return i < 0 ? { id: x, name: '' } : { id: x.slice(0, i), name: x.slice(i + 1).trim() };
@@ -645,7 +653,7 @@ function parseOthers_(s) {
 function readReservations_(withPhoto) {
   const sh = sheet_(CONFIG.SHEET_RESERVE);
   if (tableRows_(sh).length < 2) return [];
-  const width = withPhoto ? HEADERS.reserve.length : RC.REASON + 1;
+  const width = HEADERS.reserve.length;
   const values = tableRows_(sh).slice(1).map(function (row) { return row.slice(0, width); });
   const out = [];
   values.forEach(function (v, i) {
@@ -653,7 +661,7 @@ function readReservations_(withPhoto) {
     const date = cellDate_(v[RC.DATE]);
     const repId = cellText_(v[RC.REP_ID]);
     if (!code || !date || !repId) return;
-    const members = [{ id: repId, name: cellText_(v[RC.REP_NAME]) }].concat(parseOthers_(cellText_(v[RC.OTHERS])));
+    const members = [{ school: schoolOf_(cellText_(v[RC.SCHOOL])), id: repId, name: cellText_(v[RC.REP_NAME]) }].concat(parseOthers_(cellText_(v[RC.OTHERS])));
     const r = {
       row: i + 2, key: date + '#' + code, code: code, date: date, createdAt: cellStamp_(v[RC.CREATED]), place: cellText_(v[RC.PLACE]),
       type: cellText_(v[RC.TYPE]), members: members, status: cellText_(v[RC.STATUS]) || '예약', updatedAt: cellStamp_(v[RC.UPDATED]),
