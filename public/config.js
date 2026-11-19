@@ -10,5 +10,5 @@
  */
 window.GYM_CONFIG = {
   GAS_URL: 'https://script.google.com/macros/s/AKfycbxO_YoCHFOdGqU56gNVUveGWMrD_uCrCtvs4tQYvovYjcdm8v8qxtB65YRcjQejRkm1/exec',
-  SCHOOL_NAME: 'OO중학교'
+  SCHOOL_NAME: '내손중고등학교'
 };
