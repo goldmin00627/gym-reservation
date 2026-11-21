@@ -6,6 +6,7 @@ const source = ['Code.gs'].map(name => fs.readFileSync(path.join(__dirname, '../
 const documents = new Map();
 let version = 0;
 let uploads = 0;
+let uuidSequence = 0;
 let rejectCommit = false;
 const props = new Map([['ADMIN_PASSWORD', 'test-only-secret']]);
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -27,13 +28,13 @@ function context() {
       getFileById: () => ({setTrashed() {uploads--;}})
     },
     Utilities: {
-      sleep() {}, getUuid: () => 'abcdefgh-0123-4567-89ab-012345678901',
+      sleep() {}, getUuid: () => String(++uuidSequence).padStart(5, '0') + '000-0123-4567-89ab-012345678901',
       base64Decode: s => Array.from(Buffer.from(s, 'base64')), newBlob: bytes => bytes,
       formatDate(d, timezone, pattern) {
         const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
           timeZone: timezone, year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit', hourCycle:'h23'
         }).formatToParts(d).map(p => [p.type,p.value]));
-        return pattern.replace('yyyy',parts.year).replace('MM',parts.month).replace('dd',parts.day).replace('HH',parts.hour).replace('mm',parts.minute).replace('ss',parts.second);
+        return pattern.replace('yyyy',parts.year).replace('MM',parts.month).replace('dd',parts.day).replace('HH',parts.hour).replace('H',String(Number(parts.hour))).replace('mm',parts.minute).replace('ss',parts.second);
       }
     },
     UrlFetchApp: {fetch(url, options) {
@@ -179,3 +180,58 @@ assert.equal(a.route_({...changes,members:basketballTeam.slice(0,3)}).ok,false);
 assert.equal(a.route_({...changes,members:basketballTeam.slice(0,4)}).ok,true);
 assert.equal(b.route_({...request,place:'코트 2',members:[{id:'32111',name:'배드민턴'}]}).ok,false);
 console.log('PASS basketball 3/4/8/9 boundaries, no individual booking, eight-person persisted booking and member edit minimum');
+
+props.delete('ADMIN_LOGIN_STATE');
+const adminAudit=(action,extra={})=>a.route_({action,password:'test-only-secret',...extra});
+const dayAudit=()=>adminAudit('admin',{date:request.date,dates:[request.date]}).day;
+const firstCred={school:'중',studentId:'30101',name:'테스트',code:first.reservation.code,key:first.reservation.key};
+assert.equal(a.route_({action:'cancel',...firstCred,name:'다른이름'}).ok,false);
+assert.equal(a.route_({action:'cancel',...firstCred}).ok,true);
+assert.equal(b.route_({action:'lookup',...firstCred}).reservations.find(r=>r.key===first.reservation.key).status,'취소');
+assert.equal(a.route_({action:'cancel',...firstCred}).ok,false);
+const adminTarget=dayAudit().reservations.find(r=>r.status==='예약' && r.place==='코트 1');
+assert.equal(adminAudit('adminCancel',{key:adminTarget.key,reason:''}).ok,false);
+assert.equal(adminAudit('adminCancel',{key:adminTarget.key,reason:'운영 점검'}).ok,true);
+assert.equal(dayAudit().reservations.find(r=>r.key===adminTarget.key).reason,'운영 점검');
+const beforeBan=dayAudit().reservations.find(r=>r.key===mixed.reservation.key);
+assert.equal(beforeBan.status,'예약');
+const auditBan=adminAudit('addBan',{school:'중',studentId:'30201',name:'중학생',kind:'기간',days:1,reason:'점검용'});
+assert.equal(auditBan.ok,true,auditBan.error);
+assert.equal(dayAudit().reservations.find(r=>r.key===mixed.reservation.key).status,'이용 제한 취소');
+assert.equal(adminAudit('liftBan',{banId:auditBan.banId}).ok,true);
+assert.equal(a.route_({action:'checkBan',studentId:'30201',school:'중',date:request.date}).banned,false);
+const close=adminAudit('setClosed',{date:request.date,closed:true,memo:'시설점검'});
+assert.equal(close.ok,true,close.error);
+assert.equal(dayAudit().reservations.filter(r=>r.status==='예약').length,0);
+assert.equal(b.route_({...request,members:[{id:'33001',name:'휴관검증'}]}).ok,false);
+assert.equal(adminAudit('setClosed',{date:request.date,closed:false}).ok,true);
+assert.equal(dayAudit().reservations.filter(r=>r.status==='예약').length,0,'reopening must not restore canceled bookings');
+let studentSerial=34000;
+const groupAudit=n=>Array.from({length:n},()=>({school:'중',id:String(++studentSerial),name:'가상검증'}));
+const small= a.route_({...request,place:'코트 5',type:'단체',members:groupAudit(4)});
+assert.equal(small.ok,true,small.error);
+const volley=a.route_({...request,place:'배구',type:'단체',members:groupAudit(10)});
+assert.equal(volley.ok,true,volley.error);
+assert.equal(a.route_({...request,place:'코트 1',members:groupAudit(1)}).ok,false);
+assert.equal(a.route_({...request,place:'농구 왼쪽 반코트',type:'단체',members:groupAudit(4)}).ok,false);
+assert.equal(a.route_({...request,place:'배구',type:'단체',members:groupAudit(10)}).ok,false);
+assert.equal(a.route_({...request,place:'배구',type:'단체',members:groupAudit(21)}).ok,false);
+assert.equal(adminAudit('saveSettings',{restCapacity:10,notices:[]}).ok,true);
+for(const n of [4,4,2]) assert.equal(a.route_({...request,place:'휴식',type:'단체',members:groupAudit(n)}).ok,true);
+assert.equal(a.route_({...request,place:'휴식',members:groupAudit(1)}).ok,false);
+assert.equal(adminAudit('inspection',{date:'2026-11-18',inspector:'검증',items:{equipment:'불량',cleanliness:'양호',safety:'없음',other:'없음'},memo:''}).ok,false);
+assert.equal(adminAudit('inspection',{date:'2026-11-18',inspector:'검증',items:{equipment:'불량',cleanliness:'양호',safety:'없음',other:'없음'},memo:'용구 확인 필요'}).ok,true);
+assert.equal(adminAudit('inspection',{date:'2026-11-20',inspector:'검증',items:{equipment:'양호',cleanliness:'양호',safety:'없음',other:'없음'},memo:''}).ok,false);
+const jsonBefore=JSON.stringify(Array.from(documents));
+assert.equal(adminAudit('saveSettings',{restCapacity:-1,notices:[]}).ok,false);
+assert.equal(JSON.stringify(Array.from(documents)),jsonBefore);
+assert.equal(a.route_({action:'not-a-real-action'}).ok,false);
+clockNow='2026-11-22T07:59:59Z';
+assert.equal(a.route_({action:'public'}).days[0].date,'2026-11-16');
+clockNow='2026-11-22T08:00:00Z';
+assert.equal(a.route_({action:'public'}).days[0].date,'2026-11-23');
+clockNow='2026-12-20T08:00:00Z';
+const christmas=a.route_({action:'public'}).days.find(d=>d.date==='2026-12-25');
+assert.equal(christmas.closed,true);assert.match(christmas.closedMemo,/성탄절/);
+assert.equal(a.route_({...request,date:'2026-12-25',members:groupAudit(1)}).ok,false);
+console.log('PASS extended audit: student/admin cancellation, cancellation history, ban cancellation/lift, closure/reopen, small gym independence, volleyball exclusivity, rest capacity, inspection validation, settings validation and Sunday 17:00 holiday boundaries');
