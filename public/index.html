@@ -104,6 +104,9 @@
 
 .student-school-toggle{display:flex;align-items:center;gap:12px;padding:8px 0;font-size:14px;font-weight:800}.school-switch{width:64px;height:36px;flex-shrink:0;border-radius:24px;background:#64748b;padding:4px;transition:background .2s}.school-switch span{display:block;background:white;width:28px;height:28px;border-radius:50%;box-shadow:0 2px 6px #0003;transition:transform .2s}.school-switch[aria-checked=true] span{transform:translateX(28px)}.school-switch:focus-visible{outline:3px solid #3182f6;outline-offset:3px}.school-switch:disabled{opacity:.5;cursor:not-allowed}.site-footer{margin:28px auto;padding:24px;max-width:1000px;text-align:center;background:#edf1f7;color:#253449;font-size:13px;line-height:1.9;border-radius:20px;overflow-wrap:anywhere}.site-footer a{text-decoration:underline}.pw-timer{text-align:center;color:#dc2626;font-size:34px;font-weight:900;font-variant-numeric:tabular-nums}.screen-launch{width:100%;padding:18px;margin-bottom:14px;border-radius:20px;background:#172554;color:white;font-weight:800}.screen-board{position:fixed;inset:0;z-index:80;background:#0b1426;color:#fff;padding:clamp(16px,3vw,48px);overflow:auto}.screen-board header{display:flex;justify-content:space-between;align-items:center;gap:16px}.screen-board h1{font-size:clamp(28px,3vw,52px);font-weight:900}.screen-board header p{color:#cbd5e1}.screen-board button{background:#334155;color:white;padding:10px 16px;border-radius:12px;margin:4px}.screen-stage{background:#25334d;color:#cbd5e1;text-align:center;padding:10px;margin:20px 0;border-radius:10px;font-weight:800;letter-spacing:1em}.screen-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.screen-card{padding:22px;border:2px solid #385378;border-radius:20px;background:#14243f}.screen-card h2{font-size:clamp(22px,2vw,36px);font-weight:900;color:#93c5fd}.screen-card p{font-size:clamp(20px,2.2vw,40px);font-weight:800;line-height:1.4;overflow-wrap:anywhere}.screen-members{display:grid;gap:4px}.screen-card.wide .screen-members{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}.screen-card small{font-size:18px;color:#b6c3d6}.screen-card.wide{grid-column:1/-1}.screen-note{margin-top:18px;color:#94a3b8;font-size:14px}@media(max-width:500px){.screen-cards{grid-template-columns:1fr}.screen-board header{align-items:flex-start}.screen-board button{font-size:12px;padding:8px}}
 
+
+.special-overlay{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:16px;background:#080d16b8;backdrop-filter:blur(5px)}.special-overlay.hidden{display:none}.special-dialog{width:100%;max-width:560px;max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain;border:1px solid #59617170;border-radius:28px;background:#242830;color:#f8fafc;padding:24px;box-shadow:0 24px 80px #0008}.special-head{display:flex;justify-content:space-between;gap:12px}.special-head h2{font-size:25px;font-weight:900}.special-head p{color:#b3bac7;font-size:14px;margin-top:5px}.special-x{width:36px;height:36px;border-radius:12px;font-size:28px;line-height:1}.special-stage{margin:20px 0 12px;background:#454c59;border:1px solid #697180;border-radius:12px;padding:9px;text-align:center;letter-spacing:.2em;font-weight:800}.special-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.special-cards.volleyball{grid-template-columns:1fr}.special-card{position:relative;min-width:0;border:2px solid #747c88;border-radius:22px;background:#20242a;padding:22px 10px 16px;text-align:center;color:#f8fafc}.special-card.selected{border-color:#648aff;background:#23304b;box-shadow:0 0 0 1px #648aff}.special-card h3{font-size:clamp(16px,4vw,24px);font-weight:900}.special-card .zone{font-size:13px;color:#b7beca;margin-top:4px}.special-status{display:inline-block;border-radius:99px;padding:5px 12px;background:#355db7;color:#fff;font-size:13px;font-weight:800;margin-top:12px}.special-card.unavailable .special-status{color:#ff8a87;background:#632f32}.special-card.unavailable{color:#aeb5bf;background:#272a30}.special-court{display:block;height:auto;margin:18px auto 12px;width:70%;max-width:150px;color:#eef2ff}.volleyball .special-court{width:100%;max-width:430px}.unavailable .special-court{opacity:.4}.special-card-note{font-size:12px;font-weight:700;color:#aeb7c6;min-height:18px;overflow-wrap:anywhere}.selected .special-card-note{color:#86a4ff}.special-check{position:absolute;right:10px;top:10px;border-radius:50%;background:#648aff;color:white;width:23px;height:23px;display:grid;place-items:center;font-size:15px}.special-rule{border:1px solid #525b68;border-radius:14px;padding:12px;margin-top:12px;text-align:center;color:#d4d9e1;font-size:13px}.special-summary{border-top:1px solid #515967;margin-top:18px;padding-top:16px;display:flex;justify-content:space-between;gap:12px;font-size:14px;color:#b7bfcd}.special-summary strong{color:#89a6ff;text-align:right}.special-error{color:#ff8a87;font-size:13px;margin-top:10px;min-height:18px}.special-actions{display:grid;grid-template-columns:1fr 2fr;gap:12px;margin-top:14px}.special-actions button{padding:14px;border-radius:14px;background:#4b5360;color:#fff;font-weight:800}.special-actions .confirm{background:#527fff}.special-actions button:disabled{background:#424852;color:#8f98a5;cursor:not-allowed}.special-dialog button:focus-visible{outline:3px solid #91afff;outline-offset:3px}@media(max-width:360px){.special-dialog{padding:16px}.special-cards{gap:8px}.special-card{padding:24px 6px 12px}.special-status{padding:5px 8px}}
+
 </style>
 </head>
 <body class="font-sans antialiased">
@@ -401,6 +404,18 @@
   <div class="screen-stage">무 대</div><div id="screenCards" class="screen-cards"></div>
   <p class="screen-note">사진 없는 현황판 · 20초마다 갱신 · 관리자 자동 잠금 시 종료</p>
 </div>
+<div id="specialModal" class="special-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="specialTitle" aria-describedby="specialSubtitle">
+  <div class="special-dialog" tabindex="-1">
+    <div class="special-head"><div><h2 id="specialTitle"></h2><p id="specialSubtitle"></p></div><button id="specialClose" class="special-x" type="button" aria-label="코트 선택창 닫기">×</button></div>
+    <div class="special-stage">무대</div>
+    <div id="specialCards" class="special-cards"></div>
+    <p id="specialRule" class="special-rule hidden"></p>
+    <div class="special-summary"><span id="specialSummaryLabel">선택한 구역</span><strong id="specialSelection"></strong></div>
+    <p id="specialError" class="special-error" role="status" aria-live="polite"></p>
+    <div class="special-actions"><button id="specialCancel" type="button">취소</button><button id="specialConfirm" class="confirm" type="button" disabled>선택 완료</button></div>
+  </div>
+</div>
+
 <!-- 비밀번호 모달 -->
 <div id="pwModal" class="fixed inset-0 z-50 hidden items-end justify-center bg-black/40 p-4 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="pwTitle">
   <form id="pwForm" class="sheet-in w-full max-w-sm rounded-[28px] bg-card p-6" novalidate autocomplete="off">
@@ -537,7 +552,7 @@ const OVERLAPS = { '농구 왼쪽 반코트': ['코트 1', '코트 3'], '농구 
 const PLACES = [...COURTS, ...BASKET, REST, VOLLEY];
 const HALL = { '코트 1': '대체육관', '코트 2': '대체육관', '코트 3': '대체육관', '코트 4': '대체육관', '코트 5': '소체육관' };
 const CLOSED_REASON = '체육관 개방하지 않음';
-const placeLabel = (p) => (p === VOLLEY ? '배구 (대체육관 전체)' : BASKET.includes(p) ? `농구 · ${p === BASKET[0] ? '코트 1·3 구역' : '코트 2·4 구역'}` : HALL[p] ? `${HALL[p]} ${p}` : p);
+const placeLabel = (p) => (p === VOLLEY ? '배구 (대체육관 전체)' : BASKET.includes(p) ? `${p === BASKET[0] ? '농구코트 1 (코트 1·3 구역)' : '농구코트 2 (코트 2·4 구역)'}` : HALL[p] ? `${HALL[p]} ${p}` : p);
 const NOTICE_MAX = { short: 60, long: 500 };
 // 관리 점검 항목 — good(문제 없음) / bad(문제 있음) 답 (Code.gs의 INSPECT_ITEMS와 같게)
 const INSPECT_ITEMS = [
@@ -558,7 +573,6 @@ const state = {
   pub: { today: '', days: null, nextOpen: '', date: '', bookable: false, restCapacity: CONFIG.DEFAULT_REST_CAPACITY, occupancy: null, notices: [] },
   type: 'single',
   place: null,
-  basketballOpen: false,
   members: [{ school: '중', id: '', name: '', ban: '' }, { school: '중', id: '', name: '', ban: '' }],
   photo: null, thumb: null, stream: null, camOn: false,
   admin: { pw: null, date: '', tab: 'res', data: null, inspect: {}, idleTimer: null, banKind: '기간' }
@@ -1135,7 +1149,7 @@ function restStatus(occ, cap) {
 }
 function basketballStatus(occ) {
   const available = BASKET.filter(place => !placeError(place, '단체', CONFIG.BASKET_MIN, occ, CONFIG.DEFAULT_REST_CAPACITY));
-  return { closed: !available.length, count: `${available.length}/2`, sub: available.length ? '구역 선택 가능' : '두 구역 모두 사용 중' };
+  return { closed: !available.length, count: available.length ? '가능' : '불가', sub: available.length ? '구역 선택 가능' : '두 구역 모두 사용 중' };
 }
 function volleyStatus(occ) {
   if (occ[VOLLEY].people > 0) return { closed: true, count: `${occ[VOLLEY].people}명`, sub: '예약됨 · 마감' };
@@ -1167,14 +1181,16 @@ function renderMap(occ, opts) {
   };
   const side = (place, icon, iconCls, title, desc, st) => {
     const isBasketball = place === '농구';
+    const specialKind = isBasketball ? 'basketball' : place === VOLLEY ? 'volleyball' : '';
+    const interactive = sel || (!!opts.inspectSpecial && !!specialKind);
     const err = sel && !isBasketball ? placeError(place, opts.type, opts.size, occ, opts.restCap) : '';
     const blocked = sel && (place === VOLLEY || isBasketball ? st.closed : !!err);  // 배구는 구분·인원을 고른 뒤 맞추므로 자리 상태만 봄
-    const isSel = sel && (isBasketball ? opts.basketballOpen || BASKET.includes(opts.selected) : opts.selected === place);
-    const tag = sel ? 'button' : 'div';
+    const isSel = sel && (isBasketball ? BASKET.includes(opts.selected) : opts.selected === place);
+    const tag = interactive ? 'button' : 'div';
     const look = isSel ? 'border-transparent bg-brand text-white shadow-[0_0_0_3px_rgb(var(--brand)/.3)]'
       : st.closed ? 'closed border-line bg-card text-mute'
       : (blocked ? 'border-line bg-card opacity-60' : 'border-line bg-card ' + (sel ? 'hover:border-brand/50' : ''));
-    return `<${tag} ${sel ? `type="button" ${isBasketball ? `data-basketball-open aria-expanded="${!!opts.basketballOpen}" aria-controls="basketballZones"` : `data-place="${place}"`} aria-pressed="${isSel}" ${blocked ? 'aria-disabled="true"' : ''}` : ''} class="${sel ? 'press ' : ''}flex w-full items-center gap-3 rounded-2xl border-2 p-4 text-left ${look}">
+    return `<${tag} ${interactive ? `type="button" ${specialKind ? `data-special-kind="${specialKind}" aria-haspopup="dialog" aria-controls="specialModal"` : `data-place="${place}" ${blocked ? 'aria-disabled="true"' : ''}`} aria-pressed="${isSel}"` : ''} class="${interactive ? 'press ' : ''}flex w-full items-center gap-3 rounded-2xl border-2 p-4 text-left ${look}">
       <span class="grid h-11 w-11 shrink-0 place-items-center rounded-full ${isSel ? 'bg-white/20' : iconCls}">${icon}</span>
       <span class="min-w-0 flex-1">
         <span class="block text-[16px] font-bold">${title}</span>
@@ -1203,22 +1219,123 @@ function renderMap(occ, opts) {
     </div>
     <div class="mt-3 grid gap-3 lg:grid-cols-3">
       ${side(REST, restIcon, 'bg-goodsoft text-good', '휴식', '코트 없이 체육관에서 쉬어요', restStatus(occ, opts.restCap))}
-      ${side('농구', ballIcon, 'bg-brandsoft text-brand', '농구', '단체 4~8명 · 한 팀 전용 · 버튼을 누른 뒤 코트 1·3 / 2·4 중 선택', basketballStatus(occ))}
+      ${side('농구', ballIcon, 'bg-brandsoft text-brand', '농구', '단체 4~8명 · 눌러서 농구코트 선택', basketballStatus(occ))}
       ${side(VOLLEY, ballIcon, 'bg-brandsoft text-brand', '배구', `단체 ${CONFIG.VOLLEY_MIN}~${CONFIG.VOLLEY_MAX}명 · 선착순 1팀 · 대체육관 전체 사용 · 일반 코트·농구 예약이 있으면 불가`, volleyStatus(occ))}
     </div>
-    ${sel && opts.basketballOpen ? `<section id="basketballZones" class="mt-3 rounded-[22px] border-2 border-brand/30 bg-brandsoft p-4" aria-labelledby="basketballZoneTitle">
-      <h4 id="basketballZoneTitle" class="text-[17px] font-bold text-brand">농구 구역 선택</h4>
-      <p class="mt-1 text-[13px] font-semibold text-sub">두 구역 중 하나만 선택하세요. 선택한 구역은 우리 팀 4~8명이 사용해요.</p>
-      <div class="mb-2 mt-3 rounded-xl bg-ink/80 py-2 text-center text-[12px] font-bold tracking-[0.3em] text-card">무대</div>
-      <div class="grid grid-cols-2 gap-2">${tile(BASKET[0], true)}${tile(BASKET[1], true)}</div>
-      <p class="mt-2 text-[12px] font-semibold text-sub">왼쪽: 코트 1·3 구역 / 오른쪽: 코트 2·4 구역<br>일반 코트와 농구는 겹치는 구역을 함께 예약할 수 없어요.</p>
-    </section>` : ''}`;
+    `;
 }
 
 /* ============================================================
    학생: 예약 현황 불러오기 · 날짜 선택
    state.pub.date / state.pub.occupancy 는 '지금 고른 날짜' 기준
    ============================================================ */
+const special = { kind: null, admin: false, draft: null, date: '', overflow: '', opener: null };
+function specialData() {
+  if (special.admin) {
+    const day = state.admin.data?.day;
+    if (state.view !== 'admin' || !day || day.date !== special.date) return null;
+    return { occ: occupancyOf(day.reservations.filter(r => r.status === '예약')), cap: state.admin.data.restCapacity, closed: !!day.closed };
+  }
+  if (state.view !== 'student' || state.pub.date !== special.date || !state.pub.occupancy) return null;
+  return { occ: state.pub.occupancy, cap: state.pub.restCapacity, closed: !state.pub.bookable };
+}
+function specialReason(place, data) {
+  if (data.closed) return '예약할 수 없는 날짜입니다.';
+  return placeError(place, '단체', place === VOLLEY ? CONFIG.VOLLEY_MIN : CONFIG.BASKET_MIN, data.occ, data.cap);
+}
+function specialCourtSvg(place) {
+  if (place === VOLLEY) return `<svg class="special-court" viewBox="0 0 240 140" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="10" y="20" width="220" height="100"/><path d="M83 20v100m74-100v100M120 12v116"/><rect x="116" y="12" width="8" height="116"/><path d="M116 24h8m-8 8h8m-8 8h8m-8 8h8m-8 8h8m-8 8h8m-8 8h8m-8 8h8m-8 8h8m-8 8h8m-8 8h8m-8 8h8"/></svg>`;
+  const turn = place === BASKET[0] ? 'translate(0 200) rotate(-90)' : 'translate(110 0) rotate(90)';
+  return `<svg class="special-court" viewBox="0 0 110 200" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><g transform="${turn}"><rect x="10" y="10" width="180" height="90"/><path d="M28 10C28 120 172 120 172 10M73 98V82a27 27 0 0 1 54 0v16M73 92h54M89 10v10h22V10"/><circle cx="100" cy="23" r="4"/></g></svg>`;
+}
+function renderSpecial() {
+  const data = specialData();
+  if (!data) { closeSpecial(); return; }
+  const places = special.kind === 'basketball' ? BASKET : [VOLLEY];
+  const reasons = places.map(place => specialReason(place, data));
+  if (special.draft && specialReason(special.draft, data)) special.draft = null;
+  el.specialTitle.textContent = special.kind === 'basketball' ? '농구코트 선택' : '배구코트 선택';
+  el.specialSubtitle.textContent = special.admin ? '예약 현황 · 관리자 확인용' : special.kind === 'basketball' ? '단체 4~8명 · 한 구역 선택' : '단체 10~20명 · 선착순 1팀';
+  el.specialCards.className = 'special-cards' + (special.kind === 'volleyball' ? ' volleyball' : '');
+  const focusedPlace = el.specialCards.contains(document.activeElement) ? document.activeElement.dataset.specialPlace : null;
+  el.specialCards.innerHTML = places.map((place, index) => {
+    const unavailable = !!reasons[index], selected = special.draft === place && !unavailable;
+    const name = place === VOLLEY ? '배구코트' : place === BASKET[0] ? '농구코트 1' : '농구코트 2';
+    const zone = place === VOLLEY ? '대체육관 전체 · 코트 1~4' : place === BASKET[0] ? '코트 1·3 구역' : '코트 2·4 구역';
+    const tag = special.admin ? 'div' : 'button';
+    return `<${tag} class="special-card ${selected ? 'selected' : ''} ${unavailable ? 'unavailable' : ''}" ${special.admin ? '' : `type="button" data-special-place="${place}" aria-pressed="${selected}" ${unavailable ? 'disabled' : ''}`}>
+      ${selected ? '<span class="special-check" aria-hidden="true">✓</span>' : ''}<h3>${name}</h3><p class="zone">${zone}</p>
+      <span class="special-status">${unavailable ? '예약 불가' : '예약 가능'}</span>${specialCourtSvg(place)}
+      <p class="special-card-note">${unavailable ? '🔒 ' + esc(data.closed ? reasons[index] : '다른 예약으로 사용 중') : selected ? '선택됨' : special.admin ? '비어 있음' : '눌러서 선택'}</p>
+    </${tag}>`;
+  }).join('');
+  if (focusedPlace) el.specialCards.querySelector(`[data-special-place="${focusedPlace}"]:not(:disabled)`)?.focus();
+  el.specialRule.classList.toggle('hidden', special.kind !== 'volleyball');
+  el.specialRule.textContent = '일반 코트 또는 농구 예약이 있으면 배구를 예약할 수 없어요.';
+  el.specialSummaryLabel.textContent = special.admin ? '이용일' : '선택한 구역';
+  el.specialSelection.textContent = special.admin ? fmtDate(special.date) : special.draft === VOLLEY ? '대체육관 전체' : special.draft ? (special.draft === BASKET[0] ? '농구코트 1' : '농구코트 2') : '선택해 주세요';
+  el.specialError.textContent = reasons.every(Boolean) ? (special.kind === 'basketball' ? '선택 가능한 농구코트가 없습니다.' : '현재 배구코트를 예약할 수 없습니다.') : '';
+  el.specialCancel.textContent = special.admin || reasons.every(Boolean) ? '닫기' : '취소';
+  el.specialConfirm.hidden = special.admin;
+  el.specialConfirm.disabled = special.admin || !special.draft;
+}
+function refreshSpecial() { if (special.kind) renderSpecial(); }
+function openSpecial(kind, admin, opener) {
+  if (kind !== 'basketball' && kind !== 'volleyball') return;
+  if (!admin && !state.pub.bookable) return;
+  if (admin && state.view !== 'admin') return;
+  if (special.kind) closeSpecial(false);
+  special.kind = kind; special.admin = admin; special.date = admin ? state.admin.date : state.pub.date;
+  special.draft = !admin && (kind === 'basketball' ? BASKET.includes(state.place) : state.place === VOLLEY) ? state.place : null;
+  special.opener = opener; special.overflow = document.body.style.overflow;
+  document.body.style.overflow = 'hidden';
+  el.viewStudent.inert = true; el.viewAdmin.inert = true;
+  el.specialModal.classList.remove('hidden'); renderSpecial(); el.specialClose.focus();
+}
+function closeSpecial(restoreFocus = true) {
+  if (!special.kind) return;
+  const opener = special.opener, kind = special.kind, admin = special.admin;
+  special.kind = null; special.draft = null;
+  el.specialModal.classList.add('hidden'); el.specialCards.replaceChildren();
+  document.body.style.overflow = special.overflow;
+  el.viewStudent.inert = false; el.viewAdmin.inert = false;
+  if (restoreFocus) {
+    const target = opener?.isConnected ? opener : (admin ? el.adminMap : el.placeMap).querySelector(`[data-special-kind="${kind}"]`);
+    target?.focus();
+  }
+}
+el.specialClose.addEventListener('click', () => closeSpecial());
+el.specialCancel.addEventListener('click', () => closeSpecial());
+el.specialModal.addEventListener('click', event => { if (event.target === el.specialModal) closeSpecial(); });
+el.specialModal.addEventListener('keydown', event => {
+  if (event.key === 'Escape') { event.stopPropagation(); closeSpecial(); return; }
+  if (event.key !== 'Tab') return;
+  const focusable = [...el.specialModal.querySelectorAll('button:not(:disabled)')].filter(button => !button.hidden);
+  const first = focusable[0], last = focusable[focusable.length - 1];
+  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+  else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+});
+el.specialCards.addEventListener('click', event => {
+  const button = event.target.closest('[data-special-place]');
+  if (!button || special.admin) return;
+  const data = specialData();
+  if (!data || specialReason(button.dataset.specialPlace, data)) { renderSpecial(); return; }
+  special.draft = button.dataset.specialPlace; renderSpecial();
+});
+el.specialConfirm.addEventListener('click', () => {
+  if (special.admin || !special.draft || !state.pub.bookable) return;
+  const data = specialData();
+  if (!data || specialReason(special.draft, data)) { renderSpecial(); return; }
+  const kind = special.kind;
+  state.place = special.draft; state.type = 'group';
+  closeSpecial(false); fitMembers(); renderType(); renderMembers();
+  el.placeMap.querySelector(`[data-special-kind="${kind}"]`)?.focus();
+});
+el.adminMap.addEventListener('click', event => {
+  const button = event.target.closest('[data-special-kind]');
+  if (button) openSpecial(button.dataset.specialKind, true, button);
+});
+
 const dayInfo = (d) => (state.pub.days || []).find((x) => x.date === d) || null;
 // 'open' 예약 가능 | 'past' 지난 날짜 | 'today' 오늘 | 'closed' 휴관
 function dayState(d) {
@@ -1265,7 +1382,8 @@ function selectDay(d, keepPlace) {
   state.pub.date = d;
   state.pub.occupancy = Object.assign(emptyOcc(), (x && x.occupancy) || {});
   state.pub.bookable = dayState(d) === 'open';
-  if (!keepPlace || !state.pub.bookable) { state.place = null; state.basketballOpen = false; }
+  if (special.kind && !special.admin && (changed || !state.pub.bookable)) closeSpecial();
+  if (!keepPlace || !state.pub.bookable) state.place = null;
   lockSteps(!state.pub.bookable);
   if (changed) state.members.forEach((m, i) => { if (m.id) { m.ban = ''; checkBan(i); } }); // 이용 제한은 날짜마다 다름
   fitMembers(); renderDates(); renderType(); renderMembers();
@@ -1325,10 +1443,10 @@ function renderDates() {
 const visibleMembers = () => state.type === 'single' ? state.members.slice(0, 1) : state.members;
 const typeKo = () => (state.type === 'group' ? '단체' : '개인');
 const blankMember = () => ({ school: schoolOf(state.members[0]?.school), id: '', name: '', ban: '' });
-const inBasketballMode = () => state.basketballOpen || BASKET.includes(state.place);
+const inBasketballMode = () => BASKET.includes(state.place);
 function memberLimits(place = state.place) {
   if (state.type === 'single') return { min: 1, max: 1 };
-  return place === VOLLEY ? { min: CONFIG.VOLLEY_MIN, max: CONFIG.VOLLEY_MAX } : BASKET.includes(place) || (!place && state.basketballOpen) ? { min: CONFIG.BASKET_MIN, max: CONFIG.BASKET_MAX } : { min: 2, max: CONFIG.MAX_GROUP };
+  return place === VOLLEY ? { min: CONFIG.VOLLEY_MIN, max: CONFIG.VOLLEY_MAX } : BASKET.includes(place) ? { min: CONFIG.BASKET_MIN, max: CONFIG.BASKET_MAX } : { min: 2, max: CONFIG.MAX_GROUP };
 }
 // 구분·장소가 바뀌면 학생 칸 수를 규칙에 맞춤 (입력한 값은 앞에서부터 유지)
 function fitMembers() {
@@ -1352,26 +1470,18 @@ function renderType() {
 }
 
 function renderPlaces() {
+  refreshSpecial();
   if (!state.pub.occupancy) { el.placeMap.innerHTML = '<p class="py-8 text-center text-[14px] text-mute">불러오는 중...</p>'; return; }
   if (!state.pub.bookable) {
     // 지난 날짜·오늘·휴관일: 모든 코트를 회색으로
     el.placeMap.innerHTML = frozenMap(renderMap(state.pub.occupancy, { selectable: false, restCap: state.pub.restCapacity }), FROZEN_LABEL[dayState(state.pub.date)]);
     return;
   }
-  el.placeMap.innerHTML = renderMap(state.pub.occupancy, { selectable: true, type: typeKo(), size: visibleMembers().length, selected: state.place, basketballOpen: state.basketballOpen, restCap: state.pub.restCapacity });
+  el.placeMap.innerHTML = renderMap(state.pub.occupancy, { selectable: true, type: typeKo(), size: visibleMembers().length, selected: state.place, restCap: state.pub.restCapacity });
 }
 el.placeMap.addEventListener('click', (e) => {
-  if (e.target.closest('[data-basketball-open]')) {
-    if (!state.pub.bookable) return;
-    const occ = state.pub.occupancy;
-    if (!state.basketballOpen && basketballStatus(occ).closed) { toast('농구 두 구역 모두 다른 예약과 겹쳐 선택할 수 없습니다.', 'error'); return; }
-    state.basketballOpen = !state.basketballOpen;
-    state.place = null;
-    if (state.basketballOpen) state.type = 'group';
-    fitMembers(); renderType(); renderMembers();
-    el.placeMap.querySelector('[data-basketball-open]')?.focus();
-    return;
-  }
+  const trigger = e.target.closest('[data-special-kind]');
+  if (trigger) { if (state.pub.bookable) openSpecial(trigger.dataset.specialKind, false, trigger); return; }
   const b = e.target.closest('[data-place]'); if (!b) return;
   let place = b.dataset.place;
   const occ = state.pub.occupancy;
@@ -1391,7 +1501,6 @@ el.placeMap.addEventListener('click', (e) => {
     if (err) { toast(err, 'error'); return; }
   }
   state.place = place;
-  state.basketballOpen = BASKET.includes(place);
   fitMembers(); renderType(); renderMembers();
 });
 
@@ -1475,7 +1584,7 @@ function updateReserve() {
   let hint = '', bad = false;
   if (!state.pub.date || !state.pub.occupancy) hint = '예약 현황을 불러오는 중입니다.';
   else if (!state.pub.bookable) hint = '예약할 수 있는 날짜를 고르세요.';
-  else if (!state.place) hint = state.basketballOpen ? '농구 코트 1·3 구역 또는 코트 2·4 구역을 선택하세요.' : '사용할 코트나 휴식·농구·배구를 선택하세요.';
+  else if (!state.place) hint = '사용할 코트나 휴식·농구·배구를 선택하세요.';
   else if (placeErr) { hint = placeErr; bad = true; }
   else if (dupIds.length) { hint = `학번 ${dupIds[0]}이(가) 두 번 입력되었습니다.`; bad = true; }
   else if (banned) { hint = `${banned.id} 학생은 체육관을 이용할 수 없어 예약할 수 없습니다.`; bad = true; }
@@ -1493,7 +1602,7 @@ function updateReserve() {
 el.reserveForm.querySelectorAll('[data-type]').forEach((b) => b.addEventListener('click', () => {
   if (state.type === b.dataset.type) return;
   state.type = b.dataset.type;
-  if (state.type === 'single') { if (state.place === VOLLEY || BASKET.includes(state.place)) state.place = null; state.basketballOpen = false; }
+  if (state.type === 'single') { if (state.place === VOLLEY || BASKET.includes(state.place)) state.place = null; }
   fitMembers();
   renderType(); renderMembers();
 }));
@@ -1541,7 +1650,7 @@ el.reserveForm.addEventListener('submit', async (e) => {
 });
 
 function resetReserveForm() {
-  state.type = 'single'; state.place = null; state.basketballOpen = false;
+  state.type = 'single'; state.place = null;
   state.members = [blankMember(), blankMember()];
   el.agreePenalty.checked = false; el.agreePrivacy.checked = false;
   renderType(); renderMembers();
@@ -1906,6 +2015,7 @@ function enterAdmin(pw) {
   window.scrollTo({ top: 0 });
 }
 function exitAdmin(msg) {
+  closeSpecial(false);
   closeScreen();
   state.view = 'student';
   state.admin.pw = null; state.admin.data = null;
@@ -2038,16 +2148,17 @@ function renderRes() {
   const active = all.filter((r) => r.status === '예약');
   const canceled = all.filter((r) => r.status !== '예약');
   const occ = occupancyOf(active);
-  const mapHtml = renderMap(occ, { selectable: false, compact: true, restCap: d.restCapacity });
+  const mapHtml = renderMap(occ, { selectable: false, compact: true, inspectSpecial: true, restCap: d.restCapacity });
   el.adminMap.innerHTML = d.day.closed ? frozenMap(mapHtml, '휴관일 · 예약 받지 않음', 'bg-bad text-white') : mapHtml;
-  const courtPeople = COURTS.reduce((n, c) => n + occ[c].people, 0);
+  refreshSpecial();
+  const courtPeople = BIG_PLACES.concat(['코트 5']).reduce((n, c) => n + occ[c].people, 0);
   el.resSummary.textContent = `예약 ${active.length}건 · 코트 ${courtPeople}명 · 휴식 ${occ[REST].people}명${occ[VOLLEY].people ? ` · 배구 ${occ[VOLLEY].people}명` : ''}`;
   const canCancel = a.date >= seoulNow().date;
   const groups = PLACES.map((p) => ({ p, list: active.filter((r) => r.place === p) })).filter((g) => g.list.length);
   el.resList.innerHTML = groups.length
     ? groups.map((g) => {
       const o = occ[g.p];
-      const st = g.p === REST ? `${o.people}/${d.restCapacity}명` : g.p === VOLLEY ? `${o.people}명 · 대체육관 전체` : (o.group ? `${o.people}/${CONFIG.COURT_MAX} · 단체 사용` : `${o.people}/${CONFIG.COURT_MAX} · 개인`);
+      const st = BASKET.includes(g.p) ? `${o.people}/${CONFIG.BASKET_MAX}명 · 단체 사용` : g.p === REST ? `${o.people}/${d.restCapacity}명` : g.p === VOLLEY ? `${o.people}명 · 대체육관 전체` : (o.group ? `${o.people}/${CONFIG.COURT_MAX} · 단체 사용` : `${o.people}/${CONFIG.COURT_MAX} · 개인`);
       return `<div class="mt-3 rounded-2xl border-2 border-line px-4">
         <div class="flex items-center justify-between gap-2 border-b border-line py-2.5">
           <p class="text-[15px] font-bold">${esc(placeLabel(g.p))}</p>
@@ -2432,6 +2543,7 @@ el.btnDemoReset.addEventListener('click', () => armButton(el.btnDemoReset, '한 
 /* ---------- 키보드 ---------- */
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
+  if (special.kind) { closeSpecial(); return; }
   if (!el.pwModal.classList.contains('hidden')) closePw();
   else if (!el.photoModal.classList.contains('hidden')) hide(el.photoModal);
   else if (!el.cancelModal.classList.contains('hidden')) hide(el.cancelModal);
