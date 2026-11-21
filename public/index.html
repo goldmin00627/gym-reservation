@@ -102,7 +102,7 @@
   details[open] .chev { transform: rotate(180deg); }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 
-.school-mode{display:flex;align-items:center;gap:14px;padding:18px 22px;margin-bottom:14px;border-radius:24px;background:rgb(var(--card));font-weight:800}.school-mode-hint{font-size:12px;color:rgb(var(--sub));margin-left:auto}#schoolToggle{width:72px;height:40px;flex-shrink:0;border-radius:24px;background:#64748b;padding:4px;transition:background .2s}#schoolToggle span{display:block;background:white;width:32px;height:32px;border-radius:50%;box-shadow:0 2px 6px #0003;transition:transform .2s}#schoolToggle[aria-checked=true]{background:#16a34a}#schoolToggle[aria-checked=true] span{transform:translateX(32px)}.site-footer{margin:28px auto;padding:24px;max-width:1000px;text-align:center;background:#edf1f7;color:#253449;font-size:13px;line-height:1.9;border-radius:20px;overflow-wrap:anywhere}.site-footer a{text-decoration:underline}.pw-timer{text-align:center;color:#dc2626;font-size:34px;font-weight:900;font-variant-numeric:tabular-nums}.screen-launch{width:100%;padding:18px;margin-bottom:14px;border-radius:20px;background:#172554;color:white;font-weight:800}.screen-board{position:fixed;inset:0;z-index:80;background:#0b1426;color:#fff;padding:clamp(16px,3vw,48px);overflow:auto}.screen-board header{display:flex;justify-content:space-between;align-items:center;gap:16px}.screen-board h1{font-size:clamp(28px,3vw,52px);font-weight:900}.screen-board header p{color:#cbd5e1}.screen-board button{background:#334155;color:white;padding:10px 16px;border-radius:12px;margin:4px}.screen-stage{background:#25334d;color:#cbd5e1;text-align:center;padding:10px;margin:20px 0;border-radius:10px;font-weight:800;letter-spacing:1em}.screen-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.screen-card{padding:22px;border:2px solid #385378;border-radius:20px;background:#14243f}.screen-card h2{font-size:clamp(22px,2vw,36px);font-weight:900;color:#93c5fd}.screen-card p{font-size:clamp(20px,2.2vw,40px);font-weight:800;line-height:1.4;overflow-wrap:anywhere}.screen-members{display:grid;gap:4px}.screen-card.wide .screen-members{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}.screen-card small{font-size:18px;color:#b6c3d6}.screen-card.wide{grid-column:1/-1}.screen-note{margin-top:18px;color:#94a3b8;font-size:14px}@media(max-width:500px){.school-mode-hint{display:none}.screen-cards{grid-template-columns:1fr}.screen-board header{align-items:flex-start}.screen-board button{font-size:12px;padding:8px}}
+.student-school-toggle{display:flex;align-items:center;gap:12px;padding:8px 0;font-size:14px;font-weight:800}.school-switch{width:64px;height:36px;flex-shrink:0;border-radius:24px;background:#64748b;padding:4px;transition:background .2s}.school-switch span{display:block;background:white;width:28px;height:28px;border-radius:50%;box-shadow:0 2px 6px #0003;transition:transform .2s}.school-switch[aria-checked=true]{background:#16a34a}.school-switch[aria-checked=true] span{transform:translateX(28px)}.school-switch:focus-visible{outline:3px solid #3182f6;outline-offset:3px}.school-switch:disabled{opacity:.5;cursor:not-allowed}.site-footer{margin:28px auto;padding:24px;max-width:1000px;text-align:center;background:#edf1f7;color:#253449;font-size:13px;line-height:1.9;border-radius:20px;overflow-wrap:anywhere}.site-footer a{text-decoration:underline}.pw-timer{text-align:center;color:#dc2626;font-size:34px;font-weight:900;font-variant-numeric:tabular-nums}.screen-launch{width:100%;padding:18px;margin-bottom:14px;border-radius:20px;background:#172554;color:white;font-weight:800}.screen-board{position:fixed;inset:0;z-index:80;background:#0b1426;color:#fff;padding:clamp(16px,3vw,48px);overflow:auto}.screen-board header{display:flex;justify-content:space-between;align-items:center;gap:16px}.screen-board h1{font-size:clamp(28px,3vw,52px);font-weight:900}.screen-board header p{color:#cbd5e1}.screen-board button{background:#334155;color:white;padding:10px 16px;border-radius:12px;margin:4px}.screen-stage{background:#25334d;color:#cbd5e1;text-align:center;padding:10px;margin:20px 0;border-radius:10px;font-weight:800;letter-spacing:1em}.screen-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.screen-card{padding:22px;border:2px solid #385378;border-radius:20px;background:#14243f}.screen-card h2{font-size:clamp(22px,2vw,36px);font-weight:900;color:#93c5fd}.screen-card p{font-size:clamp(20px,2.2vw,40px);font-weight:800;line-height:1.4;overflow-wrap:anywhere}.screen-members{display:grid;gap:4px}.screen-card.wide .screen-members{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}.screen-card small{font-size:18px;color:#b6c3d6}.screen-card.wide{grid-column:1/-1}.screen-note{margin-top:18px;color:#94a3b8;font-size:14px}@media(max-width:500px){.screen-cards{grid-template-columns:1fr}.screen-board header{align-items:flex-start}.screen-board button{font-size:12px;padding:8px}}
 
 </style>
 </head>
@@ -123,11 +123,6 @@
 
   <!-- ================= 학생 화면 ================= -->
   <main id="viewStudent">
-    <div class="school-mode" aria-label="학교 예약 모드">
-      <span id="schoolModeLabel">중학교 예약</span>
-      <button id="schoolToggle" type="button" role="switch" aria-checked="false" aria-label="고등학교 예약 모드"><span></span></button>
-      <span class="school-mode-hint">중학교 / 고등학교</span>
-    </div>
     <!-- 공지사항 -->
     <section class="rounded-[28px] bg-brand p-5 text-white sm:p-7" aria-labelledby="noticeTitle">
       <div class="flex items-center gap-2.5">
@@ -560,7 +555,6 @@ document.querySelectorAll('[id]').forEach((n) => { el[n.id] = n; });
 
 const state = {
   view: 'student',
-  schoolMode: '중',
   pub: { today: '', days: null, nextOpen: '', date: '', bookable: false, restCapacity: CONFIG.DEFAULT_REST_CAPACITY, occupancy: null, notices: [] },
   type: 'single',
   place: null,
@@ -1317,7 +1311,7 @@ function renderDates() {
    ============================================================ */
 const visibleMembers = () => state.type === 'single' ? state.members.slice(0, 1) : state.members;
 const typeKo = () => (state.type === 'group' ? '단체' : '개인');
-const blankMember = () => ({ school: state.schoolMode, id: '', name: '', ban: '' });
+const blankMember = () => ({ school: schoolOf(state.members[0]?.school), id: '', name: '', ban: '' });
 function memberLimits(place = state.place) {
   if (state.type === 'single') return { min: 1, max: 1 };
   return place === VOLLEY ? { min: CONFIG.VOLLEY_MIN, max: CONFIG.VOLLEY_MAX } : BASKET.includes(place) ? { min: CONFIG.BASKET_MIN, max: CONFIG.BASKET_MAX } : { min: 2, max: CONFIG.MAX_GROUP };
@@ -1384,7 +1378,11 @@ function memberRowHtml(m, i) {
         <span class="text-[13px] font-bold text-sub">${label}</span>
         ${state.type === 'group' && i >= min ? `<button type="button" data-remove="${i}" class="press -mr-1 grid h-8 w-8 place-items-center rounded-full text-mute hover:text-bad" aria-label="학생 ${i + 1} 삭제"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>` : ''}
       </div>
-      <div class="mt-2">${schoolButtons(m.school)}</div>
+      <div class="student-school-toggle mt-2" role="group" aria-label="학생 ${i + 1} 학교급">
+        <span class="${schoolOf(m.school) === '중' ? 'text-brand' : 'text-sub'}">중학교</span>
+        <button class="school-switch" type="button" role="switch" data-school-toggle data-school="${schoolOf(m.school) === '중' ? '고' : '중'}" aria-checked="${schoolOf(m.school) === '고'}" aria-label="학생 ${i + 1} 고등학교 선택"><span aria-hidden="true"></span></button>
+        <span class="${schoolOf(m.school) === '고' ? 'text-brand' : 'text-sub'}">고등학교</span>
+      </div>
       <div class="mt-1.5 grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-2">
         <input data-f="id" type="text" inputmode="numeric" maxlength="5" placeholder="학번 (예: 30215)" aria-label="학생 ${i + 1} 학번" value="${esc(m.id)}" class="field !mt-0 !bg-card tracking-wide ${m.ban ? 'is-invalid' : ''}">
         <input data-f="name" type="text" maxlength="20" placeholder="이름" aria-label="학생 ${i + 1} 이름" value="${esc(m.name)}" class="field !mt-0 !bg-card ${m.ban ? 'is-invalid' : ''}">
@@ -1484,7 +1482,7 @@ el.memberRows.addEventListener('input', (e) => {
 });
 el.memberRows.addEventListener('click', (e) => {
   const choice = e.target.closest('[data-school]');
-  if (choice) { const i = Number(choice.closest('[data-i]').dataset.i); state.members[i].school = choice.dataset.school; state.members[i].ban = ''; renderMembers(); checkBan(i); return; }
+  if (choice) { const i = Number(choice.closest('[data-i]').dataset.i); state.members[i].school = choice.dataset.school; state.members[i].ban = ''; renderMembers(); checkBan(i); el.memberRows.querySelector(`[data-i="${i}"] [data-school-toggle]`)?.focus(); return; }
   const b = e.target.closest('[data-remove]'); if (!b) return;
   state.members.splice(Number(b.dataset.remove), 1);
   renderMembers();
@@ -2451,14 +2449,6 @@ if (IN_GAS) {
     group.dataset.school = button.dataset.school;
     group.innerHTML = schoolButtons(group.dataset.school);
   });
-});
-el.schoolToggle.addEventListener('click', () => {
-  state.schoolMode = state.schoolMode === '중' ? '고' : '중';
-  el.schoolToggle.setAttribute('aria-checked', String(state.schoolMode === '고'));
-  el.schoolModeLabel.textContent = state.schoolMode === '고' ? '고등학교 예약' : '중학교 예약';
-  state.members.forEach(m => { m.school = state.schoolMode; m.ban = ''; });
-  banCache.clear();
-  renderMembers(); state.members.forEach((m,i) => { if (m.id) checkBan(i); });
 });
 function renderScreen() {
   if (el.screenBoard.classList.contains('hidden') || state.view !== 'admin' || !state.admin.data) return;

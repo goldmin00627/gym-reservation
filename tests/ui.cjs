@@ -15,11 +15,23 @@ function page(storage={}) {
 const dom=page(), w=dom.window, $=s=>w.document.querySelector(s);
 await new Promise(resolve=>setTimeout(resolve,0));
 assert.deepEqual(errors.map(e=>e.message),[],'all inline scripts initialize without browser errors');
-$('#schoolToggle').click();
-assert.equal($('#schoolToggle').getAttribute('aria-checked'),'true');
-assert.equal($('#schoolModeLabel').textContent,'고등학교 예약');
+assert.equal($('#schoolToggle'),null,'no duplicate toggle above the reservation form');
+w.eval('lockSteps(false)');
+const schoolSwitch = '[data-i="0"] [data-school-toggle]';
+assert.ok($('#memberRows').contains($(schoolSwitch)));
+assert.equal($(schoolSwitch).getAttribute('aria-checked'),'false');
+$(schoolSwitch).click();
+assert.equal($(schoolSwitch).getAttribute('aria-checked'),'true');
 assert.equal(w.eval('blankMember().school'),'고');
-assert.equal(w.eval('state.members.every(m=>m.school === "고")'),true);
+assert.equal(w.eval('state.members[0].school'),'고');
+assert.equal(w.eval('state.members[1].school'),'중','school changes affect only the selected student');
+w.eval("state.type='group';renderMembers()");
+$('[data-i="1"] [data-school-toggle]').click();
+assert.equal(w.eval('state.members[1].school'),'고');
+$(schoolSwitch).click();
+assert.equal(w.eval('state.members[0].school'),'중');
+assert.equal(w.eval('state.members[1].school'),'고');
+assert.equal(w.document.activeElement,$(schoolSwitch),'keyboard focus survives rendering');
 // Occupancy must disable basketball even when only one overlapping badminton player booked.
 w.eval(`state.pub.bookable=true;state.pub.occupancy=emptyOcc();state.pub.occupancy['코트 3'].people=1;renderPlaces();`);
 assert.equal($('[data-place="농구 왼쪽 반코트"]').getAttribute('aria-disabled'),'true');
