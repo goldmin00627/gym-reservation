@@ -1178,11 +1178,11 @@ function renderMap(occ, opts) {
       <span class="grid h-11 w-11 shrink-0 place-items-center rounded-full ${isSel ? 'bg-white/20' : iconCls}">${icon}</span>
       <span class="min-w-0 flex-1">
         <span class="block text-[16px] font-bold">${title}</span>
-        <span class="block text-[12px] font-medium leading-snug ${isSel ? 'text-white/85' : 'text-sub'}">${desc}</span>
+        ${opts.compact ? '' : `<span class="block text-[12px] font-medium leading-snug ${isSel ? 'text-white/85' : 'text-sub'}">${desc}</span>`}
       </span>
       <span class="shrink-0 text-right">
         <span class="block text-[22px] font-extrabold leading-tight tabular-nums ${isSel ? 'text-white' : st.closed ? 'text-bad' : 'text-brand'}">${st.count}</span>
-        <span class="block text-[11px] font-bold ${isSel ? 'text-white/85' : 'text-mute'}">${st.sub}</span>
+        ${opts.compact ? '' : `<span class="block text-[11px] font-bold ${isSel ? 'text-white/85' : 'text-mute'}">${st.sub}</span>`}
       </span>
     </${tag}>`;
   };
@@ -2038,7 +2038,7 @@ function renderRes() {
   const active = all.filter((r) => r.status === '예약');
   const canceled = all.filter((r) => r.status !== '예약');
   const occ = occupancyOf(active);
-  const mapHtml = renderMap(occ, { selectable: false, restCap: d.restCapacity });
+  const mapHtml = renderMap(occ, { selectable: false, compact: true, restCap: d.restCapacity });
   el.adminMap.innerHTML = d.day.closed ? frozenMap(mapHtml, '휴관일 · 예약 받지 않음', 'bg-bad text-white') : mapHtml;
   const courtPeople = COURTS.reduce((n, c) => n + occ[c].people, 0);
   el.resSummary.textContent = `예약 ${active.length}건 · 코트 ${courtPeople}명 · 휴식 ${occ[REST].people}명${occ[VOLLEY].people ? ` · 배구 ${occ[VOLLEY].people}명` : ''}`;
