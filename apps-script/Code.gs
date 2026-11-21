@@ -27,7 +27,10 @@ const COURTS = ['코트 1', '코트 2', '코트 3', '코트 4', '코트 5'];
 const BIG_COURTS = ['코트 1', '코트 2', '코트 3', '코트 4'];   // 대체육관
 const REST = '휴식';
 const VOLLEY = '배구';
-const PLACES = COURTS.concat([REST, VOLLEY]);
+const BASKET = ['농구 왼쪽 반코트', '농구 오른쪽 반코트'];
+const BIG_PLACES = BIG_COURTS.concat(BASKET);
+const OVERLAPS = { '농구 왼쪽 반코트': ['코트 1', '코트 3'], '농구 오른쪽 반코트': ['코트 2', '코트 4'], '코트 1': ['농구 왼쪽 반코트'], '코트 3': ['농구 왼쪽 반코트'], '코트 2': ['농구 오른쪽 반코트'], '코트 4': ['농구 오른쪽 반코트'] };
+const PLACES = COURTS.concat(BASKET, [REST, VOLLEY]);
 
 const HEADERS = {
   reserve: ['예약번호', '이용일', '접수일시', '장소', '구분', '인원', '대표 학번', '대표 이름', '함께하는 학생',
@@ -64,7 +67,7 @@ const DEFAULT_NOTICES = [
    ========================================================= */
 function setup() {
   const props = PropertiesService.getScriptProperties();
-  if (!props.getProperty('ADMIN_PASSWORD')) props.setProperty('ADMIN_PASSWORD', '0108');
+  if (!props.getProperty('ADMIN_PASSWORD')) throw new Error('프로젝트 설정의 스크립트 속성 ADMIN_PASSWORD에 관리자 비밀번호를 먼저 설정하세요.');
   const folder = photoFolder_();
   const result = route_({ action: 'public' });
   if (!result.ok) throw new Error(result.error);
@@ -115,7 +118,7 @@ function route_(p) {
     commitStore_();
     return result;
   } catch (err) {
-    return { ok: false, error: errMsg_(err) };
+    return { ok: false, error: errMsg_(err), code: err.code || '', failures: err.failures || 0, lockedUntil: err.lockedUntil || 0, serverNow: new Date().getTime() };
   } finally {
     storeRequest_ = null;
     lock.releaseLock();
@@ -146,7 +149,7 @@ function placeError_(place, type, n, occ, restCap) {
   if (place === VOLLEY) {
     if (type !== '단체') return '배구는 단체로만 예약할 수 있습니다.';
     if (occ[VOLLEY].people > 0) return '이 날은 이미 배구 예약이 있습니다.';
-    if (BIG_COURTS.some(function (c) { return occ[c].people > 0; })) return '대체육관 코트에 먼저 들어온 예약이 있어 배구를 예약할 수 없습니다.';
+    if (BIG_PLACES.some(function (c) { return occ[c].people > 0; })) return '대체육관 코트에 먼저 들어온 예약이 있어 배구를 예약할 수 없습니다.';
     if (n < CONFIG.VOLLEY_MIN) return '배구는 ' + CONFIG.VOLLEY_MIN + '명 이상이어야 예약할 수 있습니다.';
     return '';
   }
@@ -155,7 +158,9 @@ function placeError_(place, type, n, occ, restCap) {
     if (n > left) return left > 0 ? '휴식 자리가 ' + left + '명 남아 ' + n + '명은 예약할 수 없습니다.' : '휴식 자리가 마감되었습니다.';
     return '';
   }
-  if (BIG_COURTS.indexOf(place) >= 0 && occ[VOLLEY].people > 0) return '배구 예약이 먼저 들어와 대체육관 전체를 사용합니다.';
+  if (BIG_PLACES.indexOf(place) >= 0 && occ[VOLLEY].people > 0) return '배구 예약이 먼저 들어와 대체육관 전체를 사용합니다.';
+  const overlap = (OVERLAPS[place] || []).filter(function (c) { return occ[c].people > 0; });
+  if (overlap.length) return overlap.join('·') + ' 예약과 구역이 겹쳐 예약할 수 없습니다.';
   const o = occ[place];
   if (type === '단체') return o.people > 0 ? place + ' 자리에 이미 다른 학생이 예약되어 단체로 쓸 수 없습니다. 비어 있는 코트를 고르세요.' : '';
   if (o.group || o.people >= CONFIG.COURT_MAX) return place + ' 자리가 마감되었습니다.';
@@ -281,7 +286,7 @@ function handlePublic_() {
       occupancy: occupancy_(all.filter(function (r) { return r.date === d; }))
     };
   });
-  return { ok: true, today: week.today, days: days, nextOpen: week.nextOpenLabel, restCapacity: settings.restCapacity, notices: settings.notices, schoolLevels: true, adminLockout: true };
+  return { ok: true, today: week.today, days: days, nextOpen: week.nextOpenLabel, restCapacity: settings.restCapacity, notices: settings.notices, schoolLevels: true, adminLockout: true, courtLayouts: true };
 }
 
 /* ---------- 학생: 이용 제한 확인 ---------- */
@@ -796,8 +801,7 @@ function checkPassword_(input) {
   const state = JSON.parse(props.getProperty(key) || '{"failures":0,"lockedUntil":0}');
   const now = new Date().getTime();
   if (state.lockedUntil > now) {
-    const minutes = Math.ceil((state.lockedUntil - now) / 60000);
-    throw new Error('관리자 접근이 잠겨 있습니다. ' + minutes + '분 후 다시 시도하세요.');
+    throw adminLoginError_(3, state.lockedUntil);
   }
   if (state.lockedUntil) state.failures = 0;
   if (String(input || '') === pw) {
@@ -807,8 +811,13 @@ function checkPassword_(input) {
   const failures = (Number(state.failures) || 0) + 1;
   const lockedUntil = failures >= 3 ? now + 10 * 60000 : 0;
   props.setProperty(key, JSON.stringify({ failures: failures, lockedUntil: lockedUntil }));
-  if (lockedUntil) throw new Error('비밀번호를 3회 연속 틀려 관리자 접근이 10분 동안 잠겼습니다.');
-  throw new Error('비밀번호가 올바르지 않습니다. ' + (3 - failures) + '회 더 틀리면 10분 동안 잠깁니다.');
+  throw adminLoginError_(failures, lockedUntil);
+}
+
+function adminLoginError_(failures, lockedUntil) {
+  const error = new Error('[' + failures + '/3] 3회 이상 틀리면 관리자 페이지가 10분간 잠깁니다.');
+  error.code = 'ADMIN_LOGIN'; error.failures = failures; error.lockedUntil = lockedUntil;
+  return error;
 }
 
 function withLock_(fn) { return fn(); }

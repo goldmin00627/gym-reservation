@@ -101,6 +101,9 @@
   details > summary::-webkit-details-marker { display: none; }
   details[open] .chev { transform: rotate(180deg); }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+.school-mode{display:flex;align-items:center;gap:14px;padding:18px 22px;margin-bottom:14px;border-radius:24px;background:rgb(var(--card));font-weight:800}.school-mode-hint{font-size:12px;color:rgb(var(--sub));margin-left:auto}#schoolToggle{width:72px;height:40px;flex-shrink:0;border-radius:24px;background:#64748b;padding:4px;transition:background .2s}#schoolToggle span{display:block;background:white;width:32px;height:32px;border-radius:50%;box-shadow:0 2px 6px #0003;transition:transform .2s}#schoolToggle[aria-checked=true]{background:#16a34a}#schoolToggle[aria-checked=true] span{transform:translateX(32px)}.site-footer{margin:28px auto;padding:24px;max-width:1000px;text-align:center;background:#edf1f7;color:#253449;font-size:13px;line-height:1.9;border-radius:20px;overflow-wrap:anywhere}.site-footer a{text-decoration:underline}.pw-timer{text-align:center;color:#dc2626;font-size:34px;font-weight:900;font-variant-numeric:tabular-nums}.screen-launch{width:100%;padding:18px;margin-bottom:14px;border-radius:20px;background:#172554;color:white;font-weight:800}.screen-board{position:fixed;inset:0;z-index:80;background:#0b1426;color:#fff;padding:clamp(16px,3vw,48px);overflow:auto}.screen-board header{display:flex;justify-content:space-between;align-items:center;gap:16px}.screen-board h1{font-size:clamp(28px,3vw,52px);font-weight:900}.screen-board header p{color:#cbd5e1}.screen-board button{background:#334155;color:white;padding:10px 16px;border-radius:12px;margin:4px}.screen-stage{background:#25334d;color:#cbd5e1;text-align:center;padding:10px;margin:20px 0;border-radius:10px;font-weight:800;letter-spacing:1em}.screen-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.screen-card{padding:22px;border:2px solid #385378;border-radius:20px;background:#14243f}.screen-card h2{font-size:clamp(22px,2vw,36px);font-weight:900;color:#93c5fd}.screen-card p{font-size:clamp(20px,2.2vw,40px);font-weight:800;line-height:1.4;overflow-wrap:anywhere}.screen-members{display:grid;gap:4px}.screen-card.wide .screen-members{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}.screen-card small{font-size:18px;color:#b6c3d6}.screen-card.wide{grid-column:1/-1}.screen-note{margin-top:18px;color:#94a3b8;font-size:14px}@media(max-width:500px){.school-mode-hint{display:none}.screen-cards{grid-template-columns:1fr}.screen-board header{align-items:flex-start}.screen-board button{font-size:12px;padding:8px}}
+
 </style>
 </head>
 <body class="font-sans antialiased">
@@ -120,6 +123,11 @@
 
   <!-- ================= 학생 화면 ================= -->
   <main id="viewStudent">
+    <div class="school-mode" aria-label="학교 예약 모드">
+      <span id="schoolModeLabel">중학교 예약</span>
+      <button id="schoolToggle" type="button" role="switch" aria-checked="false" aria-label="고등학교 예약 모드"><span></span></button>
+      <span class="school-mode-hint">중학교 / 고등학교</span>
+    </div>
     <!-- 공지사항 -->
     <section class="rounded-[28px] bg-brand p-5 text-white sm:p-7" aria-labelledby="noticeTitle">
       <div class="flex items-center gap-2.5">
@@ -215,7 +223,7 @@
         </label>
         <label class="flex cursor-pointer items-start gap-3 rounded-2xl bg-field p-4">
           <input id="agreePrivacy" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-brand">
-          <span class="text-[14px] leading-relaxed"><b>[필수] 기록 동의</b><br><span class="text-sub">이용 확인을 위해 학번·이름·대표 학생 얼굴 사진이 기록되는 데 동의합니다. 기록은 체육관 관리에만 사용됩니다.</span></span>
+          <span class="text-[14px] leading-relaxed"><b>개인정보 수집 및 이용 동의</b><br><span class="text-sub">체육관 이용 확인 및 관리를 위해 학번·이름·대표 학생 얼굴 사진을 수집하며, 수집된 정보는 이용 종료 후 학기 말 일괄 삭제됩니다. 동의를 거부할 수 있으나, 거부 시 예약이 제한됩니다.</span></span>
         </label>
       </div>
 
@@ -242,6 +250,7 @@
 
   <!-- ================= 관리자 화면 ================= -->
   <main id="viewAdmin" class="hidden">
+    <button id="btnScreen" type="button" class="screen-launch">예약 현황판(스크린 모드) ↗</button>
     <!-- 날짜 선택 -->
     <section class="rounded-[28px] bg-card p-4 sm:p-6">
       <div class="flex items-center justify-between gap-2">
@@ -391,6 +400,12 @@
   </main>
 </div>
 
+<footer class="site-footer">운영 및 문의 : 내손중학교 학생 김민석 | <a href="mailto:MS.gym.reservation@gmail.com">MS.gym.reservation@gmail.com</a><br>Copyright © 2026 김민석. All Rights Reserved.</footer>
+<div id="screenBoard" class="screen-board hidden" role="dialog" aria-modal="true" aria-label="예약 현황판">
+  <header><div><p>내손중고등학교 · 체육관</p><h1>실시간 예약 현황</h1><p id="screenDate"></p></div><div><button id="screenFullscreen" type="button">전체 화면</button><button id="screenClose" type="button">닫기</button><p id="screenUpdated" role="status"></p></div></header>
+  <div class="screen-stage">무 대</div><div id="screenCards" class="screen-cards"></div>
+  <p class="screen-note">사진 없는 현황판 · 20초마다 갱신 · 관리자 자동 잠금 시 종료</p>
+</div>
 <!-- 비밀번호 모달 -->
 <div id="pwModal" class="fixed inset-0 z-50 hidden items-end justify-center bg-black/40 p-4 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="pwTitle">
   <form id="pwForm" class="sheet-in w-full max-w-sm rounded-[28px] bg-card p-6" novalidate autocomplete="off">
@@ -400,7 +415,8 @@
     <h3 id="pwTitle" class="mt-4 text-center text-[20px] font-bold">관리자 로그인</h3>
     <p class="mt-1.5 text-center text-[14px] leading-relaxed text-sub">예약 현황과 점검 기록을 보려면 비밀번호를 입력하세요.</p>
     <input id="pwInput" type="password" inputmode="numeric" placeholder="비밀번호" aria-label="비밀번호" class="field mt-5 text-center text-[20px] tracking-[0.3em]">
-    <p id="pwError" class="mt-2 h-5 text-center text-[13px] font-semibold text-bad" aria-live="polite"></p>
+    <p id="pwError" class="mt-2 min-h-5 text-center text-[13px] font-semibold text-bad" style="color:#dc2626;font-weight:800" aria-live="polite"></p>
+    <p id="pwTimer" class="pw-timer" aria-live="off"></p>
     <div class="mt-3 grid grid-cols-2 gap-2">
       <button type="button" data-close class="press h-14 rounded-2xl bg-field text-[16px] font-bold text-sub">취소</button>
       <button type="submit" class="press h-14 rounded-2xl bg-brand text-[16px] font-bold text-white">들어가기</button>
@@ -483,7 +499,7 @@
 const CONFIG = {
   // ● GitHub Pages 등: config.js 의 GAS_URL 에 Apps Script 웹 앱 주소(https://script.google.com/macros/s/.../exec)
   // ● 구글만으로 운영: 이 파일을 Apps Script의 HTML 파일 'index'로 넣으면 자동 연결 (GAS_URL 필요 없음)
-  // 둘 다 아니면 '데모 모드': 이 브라우저 안에만 저장됩니다. (데모 관리자 비밀번호 0108)
+  // 둘 다 아니면 '데모 모드': 이 브라우저 안에만 저장됩니다. (데모 관리자 비밀번호 DEMO-ONLY)
   // ※ 실제 관리자 비밀번호는 Apps Script 스크립트 속성에만 있습니다.
   GAS_URL: String((window.GYM_CONFIG && window.GYM_CONFIG.GAS_URL) || '').trim(),
 
@@ -518,7 +534,10 @@ const COURTS = ['코트 1', '코트 2', '코트 3', '코트 4', '코트 5'];
 const BIG_COURTS = ['코트 1', '코트 2', '코트 3', '코트 4'];   // 대체육관
 const REST = '휴식';
 const VOLLEY = '배구';
-const PLACES = [...COURTS, REST, VOLLEY];
+const BASKET = ['농구 왼쪽 반코트', '농구 오른쪽 반코트'];
+const BIG_PLACES = [...BIG_COURTS, ...BASKET];
+const OVERLAPS = { '농구 왼쪽 반코트': ['코트 1', '코트 3'], '농구 오른쪽 반코트': ['코트 2', '코트 4'], '코트 1': [BASKET[0]], '코트 3': [BASKET[0]], '코트 2': [BASKET[1]], '코트 4': [BASKET[1]] };
+const PLACES = [...COURTS, ...BASKET, REST, VOLLEY];
 const HALL = { '코트 1': '대체육관', '코트 2': '대체육관', '코트 3': '대체육관', '코트 4': '대체육관', '코트 5': '소체육관' };
 const CLOSED_REASON = '체육관 개방하지 않음';
 const placeLabel = (p) => (p === VOLLEY ? '배구 (대체육관 전체)' : HALL[p] ? `${HALL[p]} ${p}` : p);
@@ -539,6 +558,7 @@ document.querySelectorAll('[id]').forEach((n) => { el[n.id] = n; });
 
 const state = {
   view: 'student',
+  schoolMode: '중',
   pub: { today: '', days: null, nextOpen: '', date: '', bookable: false, restCapacity: CONFIG.DEFAULT_REST_CAPACITY, occupancy: null, notices: [] },
   type: 'single',
   place: null,
@@ -557,7 +577,7 @@ const store = {
 const IN_GAS = typeof google !== 'undefined' && !!(google.script && google.script.run);
 const HAS_URL = /^https:\/\/script\.google\.com\/macros\//.test(CONFIG.GAS_URL.trim());
 const isConnected = () => IN_GAS || HAS_URL;
-const DEMO_PASSWORD = '0108'; // 데모 모드 전용 (실제 비밀번호는 Code.gs)
+const DEMO_PASSWORD = 'DEMO-ONLY'; // 데모 모드 전용 (실제 비밀번호는 Code.gs)
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -674,7 +694,7 @@ function setLoading(on, text = '저장 중입니다...') { el.loadingText.textCo
 async function task(text, fn, onError = (msg) => toast(msg, 'error')) {
   setLoading(true, text);
   try { return await fn(); }
-  catch (err) { onError(err.message); }
+  catch (err) { onError(err.message, err); }
   finally { setLoading(false); }
 }
 
@@ -716,6 +736,7 @@ function armButton(btn, armedText, onConfirm) {
 let pendingRequests = 0;
 async function api(payload) {
   if (isConnected() && !state.pub.schoolLevels && (payload.school === '고' || (payload.members || []).some(m => m.school === '고'))) throw new Error('고등학교 예약을 사용하려면 관리자가 서버를 새 버전으로 배포해야 합니다.');
+  if (isConnected() && BASKET.includes(payload.place) && !state.pub.courtLayouts) throw new Error('농구 반코트를 사용하려면 서버를 새 버전으로 배포해야 합니다.');
   if (IN_GAS) return gasRun(payload);
   if (!HAS_URL) {
     await sleep(payload.action === 'checkBan' ? 120 : 450);
@@ -730,7 +751,7 @@ async function api(payload) {
     // Content-Type을 지정하지 않으면 text/plain으로 전송되어 CORS 사전 요청 없이 Apps Script에 도달합니다.
     const res = await fetch(CONFIG.GAS_URL.trim(), { method: 'POST', body: JSON.stringify(payload), signal: ctrl.signal });
     const data = await res.json();
-    if (!data.ok) throw new Error(data.error || '요청을 처리하지 못했습니다.');
+    if (!data.ok) throw serverError(data);
     return data;
   } catch (err) {
     if (err.name === 'AbortError') throw new Error('응답 시간이 초과되었습니다. 네트워크를 확인하고 다시 시도하세요.');
@@ -749,7 +770,7 @@ function gasRun(payload) {
     google.script.run
       .withSuccessHandler((data) => {
         clearTimeout(timer);
-        if (!data || !data.ok) reject(new Error((data && data.error) || '요청을 처리하지 못했습니다.'));
+        if (!data || !data.ok) reject(serverError(data || {}));
         else resolve(data);
       })
       .withFailureHandler((err) => {
@@ -791,7 +812,7 @@ function placeError(place, type, n, occ, restCap) {
   if (place === VOLLEY) {
     if (type !== '단체') return '배구는 단체로만 예약할 수 있습니다.';
     if (occ[VOLLEY].people > 0) return '이 날은 이미 배구 예약이 있습니다.';
-    if (BIG_COURTS.some((c) => occ[c].people > 0)) return '대체육관 코트에 먼저 들어온 예약이 있어 배구를 예약할 수 없습니다.';
+    if (BIG_PLACES.some((c) => occ[c].people > 0)) return '대체육관 코트에 먼저 들어온 예약이 있어 배구를 예약할 수 없습니다.';
     if (n < CONFIG.VOLLEY_MIN) return `배구는 ${CONFIG.VOLLEY_MIN}명 이상이어야 예약할 수 있습니다.`;
     return '';
   }
@@ -800,7 +821,9 @@ function placeError(place, type, n, occ, restCap) {
     if (n > left) return left > 0 ? `휴식 자리가 ${left}명 남아 ${n}명은 예약할 수 없습니다.` : '휴식 자리가 마감되었습니다.';
     return '';
   }
-  if (BIG_COURTS.includes(place) && occ[VOLLEY].people > 0) return '배구 예약이 먼저 들어와 대체육관 전체를 사용합니다.';
+  if (BIG_PLACES.includes(place) && occ[VOLLEY].people > 0) return '배구 예약이 먼저 들어와 대체육관 전체를 사용합니다.';
+  const overlap = (OVERLAPS[place] || []).filter(c => occ[c]?.people > 0);
+  if (overlap.length) return `${overlap.join('·')} 예약과 구역이 겹쳐 예약할 수 없습니다.`;
   const o = occ[place];
   if (type === '단체') return o.people > 0 ? `${place} 자리에 이미 다른 학생이 예약되어 단체로 쓸 수 없습니다. 비어 있는 코트를 고르세요.` : '';
   if (o.group || o.people >= CONFIG.COURT_MAX) return `${place} 자리가 마감되었습니다.`;
@@ -887,14 +910,13 @@ function demoCheckPw(p) {
   const key = 'gym.demo.adminLogin';
   const saved = store.get(key) || { failures: 0, lockedUntil: 0 };
   const now = Date.now();
-  if (saved.lockedUntil > now) throw new Error(`관리자 접근이 잠겨 있습니다. ${Math.ceil((saved.lockedUntil - now) / 60000)}분 후 다시 시도하세요.`);
+  if (saved.lockedUntil > now) throw serverError({ code: 'ADMIN_LOGIN', failures: 3, lockedUntil: saved.lockedUntil, serverNow: now, error: '[3/3] 3회 이상 틀리면 관리자 페이지가 10분간 잠깁니다.' });
   if (saved.lockedUntil) saved.failures = 0;
   if (String(p.password || '') === DEMO_PASSWORD) { store.del(key); return; }
   const failures = saved.failures + 1;
   const lockedUntil = failures >= 3 ? now + 10 * 60000 : 0;
   store.set(key, { failures, lockedUntil });
-  if (lockedUntil) throw new Error('비밀번호를 3회 연속 틀려 관리자 접근이 10분 동안 잠겼습니다.');
-  throw new Error(`비밀번호가 올바르지 않습니다. ${3 - failures}회 더 틀리면 10분 동안 잠깁니다.`);
+  throw serverError({ code: 'ADMIN_LOGIN', failures, lockedUntil, serverNow: now, error: `[${failures}/3] 3회 이상 틀리면 관리자 페이지가 10분간 잠깁니다.` });
 }
 const stripPhoto = ({ thumb, photoUrl, ...rest }) => rest;
 function demoFind(db, key) {
@@ -1097,8 +1119,10 @@ function renderNotices(notices) {
    체육관 배치도 (학생 선택용 / 관리자 현황용 공용)
    ============================================================ */
 function courtStatus(place, occ) {
-  const o = occ[place], max = CONFIG.COURT_MAX;
-  if (BIG_COURTS.includes(place) && occ[VOLLEY].people > 0) return { closed: true, count: '배구', sub: '배구 예약 사용' };
+  const o = occ[place] || { people: 0, group: false }, max = CONFIG.COURT_MAX;
+  const overlap = (OVERLAPS[place] || []).filter(c => occ[c]?.people > 0);
+  if (overlap.length) return { closed: true, count: '사용 중', sub: overlap.join('·') + '와 겹침' };
+  if (BIG_PLACES.includes(place) && occ[VOLLEY].people > 0) return { closed: true, count: '배구', sub: '배구 예약 사용' };
   if (o.group) return { closed: true, count: `${o.people}/${max}`, sub: '단체 사용 · 마감' };
   if (o.people >= max) return { closed: true, count: `${o.people}/${max}`, sub: '마감' };
   if (o.people === 0) return { closed: false, count: `0/${max}`, sub: '비어 있음' };
@@ -1110,19 +1134,20 @@ function restStatus(occ, cap) {
 }
 function volleyStatus(occ) {
   if (occ[VOLLEY].people > 0) return { closed: true, count: `${occ[VOLLEY].people}명`, sub: '예약됨 · 마감' };
-  if (BIG_COURTS.some((c) => occ[c].people > 0)) return { closed: true, count: '불가', sub: '코트 예약이 먼저 있음' };
+  if (BIG_PLACES.some((c) => occ[c].people > 0)) return { closed: true, count: '불가', sub: '코트 예약이 먼저 있음' };
   return { closed: false, count: '가능', sub: '선착순 1팀' };
 }
 
 // opts: { selectable, type, size, selected, restCap }
 function renderMap(occ, opts) {
+  occ = Object.assign(emptyOcc(), occ);
   const sel = opts.selectable;
   const pickedVolley = sel && opts.selected === VOLLEY;
   const tile = (place, tall) => {
     const st = courtStatus(place, occ);
     const err = sel ? placeError(place, opts.type, opts.size, occ, opts.restCap) : '';
     const isSel = sel && opts.selected === place;
-    const asVolley = pickedVolley && BIG_COURTS.includes(place);
+    const asVolley = pickedVolley && BIG_PLACES.includes(place);
     const on = isSel || asVolley;
     const tag = sel ? 'button' : 'div';
     const look = on ? 'is-selected bg-brand text-white'
@@ -1163,6 +1188,8 @@ function renderMap(occ, opts) {
         <p class="flex items-center justify-between px-1 pb-2 text-[13px] font-bold text-sub"><span>대체육관</span>${volleyOn ? '<span class="text-brand">배구 예약 있음</span>' : pickedVolley ? '<span class="text-brand">전체를 배구로 사용</span>' : ''}</p>
         <div class="mb-2 rounded-xl bg-ink/80 py-2 text-center text-[12px] font-bold tracking-[0.3em] text-card">무대</div>
         <div class="grid grid-cols-2 gap-2">${tile('코트 1')}${tile('코트 2')}${tile('코트 3')}${tile('코트 4')}</div>
+        <div class="mt-2 grid grid-cols-2 gap-2">${tile(BASKET[0])}${tile(BASKET[1])}</div>
+        <p class="mt-2 text-[12px] font-semibold text-sub">농구 왼쪽 ↔ 배드민턴 1·3 / 오른쪽 ↔ 2·4<br>겹치는 구역은 함께 예약할 수 없어요.</p>
       </div>
       <div class="flex flex-col rounded-[22px] bg-floor p-3">
         <p class="px-1 pb-2 text-[13px] font-bold text-sub">소체육관 <span class="font-medium text-mute">(보조체육관)</span></p>
@@ -1171,7 +1198,7 @@ function renderMap(occ, opts) {
     </div>
     <div class="mt-3 grid gap-3 sm:grid-cols-2">
       ${side(REST, restIcon, 'bg-goodsoft text-good', '휴식', '코트 없이 체육관에서 쉬어요', restStatus(occ, opts.restCap))}
-      ${side(VOLLEY, ballIcon, 'bg-brandsoft text-brand', '배구', `대체육관 전체 · ${CONFIG.VOLLEY_MIN}명 이상`, volleyStatus(occ))}
+      ${side(VOLLEY, ballIcon, 'bg-brandsoft text-brand', '배구', `단체 ${CONFIG.VOLLEY_MIN}~${CONFIG.VOLLEY_MAX}명 · 선착순 1팀 · 대체육관 전체 사용 · 배드민턴·농구 예약이 있으면 불가`, volleyStatus(occ))}
     </div>`;
 }
 
@@ -1199,6 +1226,7 @@ async function loadPublic() {
       today: data.today,
       days: data.days || [],
       schoolLevels: data.schoolLevels === true,
+      courtLayouts: data.courtLayouts === true,
       nextOpen: data.nextOpen || '',
       restCapacity: Number(data.restCapacity ?? CONFIG.DEFAULT_REST_CAPACITY),
       notices: normNotices(data.notices && data.notices.length ? data.notices : (data.notices ? [] : CONFIG.DEFAULT_NOTICES))
@@ -1283,7 +1311,7 @@ function renderDates() {
    ============================================================ */
 const visibleMembers = () => state.type === 'single' ? state.members.slice(0, 1) : state.members;
 const typeKo = () => (state.type === 'group' ? '단체' : '개인');
-const blankMember = () => ({ school: '중', id: '', name: '', ban: '' });
+const blankMember = () => ({ school: state.schoolMode, id: '', name: '', ban: '' });
 function memberLimits(place = state.place) {
   if (state.type === 'single') return { min: 1, max: 1 };
   return place === VOLLEY ? { min: CONFIG.VOLLEY_MIN, max: CONFIG.VOLLEY_MAX } : { min: 2, max: CONFIG.MAX_GROUP };
@@ -1321,7 +1349,7 @@ el.placeMap.addEventListener('click', (e) => {
   let place = b.dataset.place;
   const occ = state.pub.occupancy;
   // 배구를 고른 상태에서 대체육관 코트를 누르면 배구 선택으로 취급
-  if (state.place === VOLLEY && BIG_COURTS.includes(place)) place = VOLLEY;
+  if (state.place === VOLLEY && BIG_PLACES.includes(place)) place = VOLLEY;
   if (state.place === place) { state.place = null; fitMembers(); renderType(); renderMembers(); return; }
   if (place === VOLLEY) {
     if (volleyStatus(occ).closed) { toast(placeError(VOLLEY, '단체', CONFIG.VOLLEY_MIN, occ, state.pub.restCapacity), 'error'); return; }
@@ -1777,20 +1805,51 @@ function renderLockButton() {
   el.btnLock.title = admin ? '잠그고 나가기' : '관리자';
   el.btnLock.className = 'press grid h-11 w-11 place-items-center rounded-full shadow-sm ' + (admin ? 'bg-brand text-white' : 'bg-card text-sub hover:text-brand');
 }
-function openPw() { el.pwInput.value = ''; el.pwError.textContent = ''; show(el.pwModal); setTimeout(() => el.pwInput.focus(), 50); }
+const LOGIN_KEY = 'gym.admin.login.v2';
+function serverError(data) {
+  const error = Object.assign(new Error(data.error || '요청을 처리하지 못했습니다.'), { code: data.code, failures: data.failures, lockedUntil: data.lockedUntil, serverNow: data.serverNow });
+  if (error.code === 'ADMIN_LOGIN') rememberLogin(error);
+  return error;
+}
+function rememberLogin(error) {
+  const remaining = Math.max(0, Number(error.lockedUntil || 0) - Number(error.serverNow || Date.now()));
+  store.set(LOGIN_KEY, { failures: Number(error.failures) || 0, lockedUntil: remaining ? Date.now() + remaining : 0 });
+}
+function paintLogin() {
+  const saved = store.get(LOGIN_KEY) || {};
+  let left = Math.max(0, Math.ceil((Number(saved.lockedUntil || 0) - Date.now()) / 1000));
+  if (saved.lockedUntil && !left) { store.del(LOGIN_KEY); saved.failures = 0; }
+  el.pwInput.disabled = left > 0;
+  el.pwForm.querySelector('[type=submit]').disabled = left > 0;
+  el.pwTimer.textContent = left ? `${String(Math.floor(left/60)).padStart(2,'0')}:${String(left%60).padStart(2,'0')}` : '';
+  if (saved.failures) el.pwError.textContent = `[${Math.min(3,saved.failures)}/3] 3회 이상 틀리면 관리자 페이지가 10분간 잠깁니다.`;
+  else if (el.pwError.dataset.loginWarning) el.pwError.textContent = '';
+  el.pwError.dataset.loginWarning = saved.failures ? '1' : '';
+  return left > 0;
+}
+setInterval(() => { if (!el.pwModal.classList.contains('hidden')) paintLogin(); }, 250);
+window.addEventListener('storage', event => { if (event.key === LOGIN_KEY) paintLogin(); });
+function openPw() { el.pwInput.value = ''; el.pwError.textContent = ''; paintLogin(); show(el.pwModal); setTimeout(() => { if (!el.pwInput.disabled) el.pwInput.focus(); }, 50); }
 function closePw() { hide(el.pwModal); }
-// 비밀번호는 서버(Code.gs)에서 확인 — 화면 코드에는 비밀번호가 없음
 el.pwForm.addEventListener('submit', async (e) => {
   e.preventDefault();
+  if (paintLogin()) return;
   const pw = el.pwInput.value;
   if (!pw) { el.pwInput.focus(); return; }
   let passed = false;
-  await task('확인 중입니다...', async () => { await api({ action: 'login', password: pw }); passed = true; }, (msg) => {
-    el.pwError.textContent = /비밀번호/.test(msg) ? '비밀번호가 일치하지 않습니다.' : msg;
+  await task('확인 중입니다...', async () => { await api({ action: 'login', password: pw }); passed = true; }, (msg, err) => {
+    // The current server returns exact attempt counts. Older deployments still enforce the server lock.
+    if (err.code !== 'ADMIN_LOGIN' && /비밀번호|관리자 접근이 잠겨/.test(msg)) {
+      const saved = store.get(LOGIN_KEY) || {};
+      const failures = /잠/.test(msg) && !/더 틀리면/.test(msg) ? 3 : Math.min(3, (saved.failures || 0) + 1);
+      store.set(LOGIN_KEY, { failures, lockedUntil: failures >= 3 ? Date.now() + 600000 : 0 });
+    }
+    el.pwError.textContent = msg;
+    paintLogin();
     el.pwForm.classList.remove('shake'); void el.pwForm.offsetWidth; el.pwForm.classList.add('shake');
-    el.pwInput.select();
+    if (!el.pwInput.disabled) el.pwInput.select();
   });
-  if (passed) { closePw(); enterAdmin(pw); }
+  if (passed) { store.del(LOGIN_KEY); closePw(); enterAdmin(pw); }
 });
 el.pwModal.querySelector('[data-close]').addEventListener('click', closePw);
 el.btnLock.addEventListener('click', () => { state.view === 'admin' ? exitAdmin() : openPw(); });
@@ -1811,6 +1870,7 @@ function enterAdmin(pw) {
   window.scrollTo({ top: 0 });
 }
 function exitAdmin(msg) {
+  closeScreen();
   state.view = 'student';
   state.admin.pw = null; state.admin.data = null;
   clearTimeout(state.admin.idleTimer);
@@ -1841,12 +1901,16 @@ async function loadAdmin(quiet = false) {
   renderAdminDate();
   if (!quiet) setLoading(true, '불러오는 중입니다...');
   try {
-    a.data = await api({ action: 'admin', password: a.pw, date: a.date, dates: weekOf(a.date) });
+    const requestedDate = a.date, requestedPw = a.pw;
+    const data = await api({ action: 'admin', password: a.pw, date: a.date, dates: weekOf(a.date) });
+    if (state.view !== 'admin' || a.pw !== requestedPw || a.date !== requestedDate) return;
+    a.data = data;
+    renderScreen();
     renderWeek(); renderAdminDate(); renderClosure(); renderRes(); renderInspect(); renderBans();
     if (a.tab === 'settings' && !el.panelSettings.dataset.loaded) fillSettings();
   } catch (err) {
     toast(err.message, 'error');
-    if (/비밀번호/.test(err.message)) exitAdmin();
+    if (err.code === 'ADMIN_LOGIN' || /비밀번호|관리자 접근이 잠겨/.test(err.message)) exitAdmin();
   } finally {
     if (!quiet) setLoading(false);
   }
@@ -2376,6 +2440,45 @@ if (IN_GAS) {
     group.innerHTML = schoolButtons(group.dataset.school);
   });
 });
+el.schoolToggle.addEventListener('click', () => {
+  state.schoolMode = state.schoolMode === '중' ? '고' : '중';
+  el.schoolToggle.setAttribute('aria-checked', String(state.schoolMode === '고'));
+  el.schoolModeLabel.textContent = state.schoolMode === '고' ? '고등학교 예약' : '중학교 예약';
+  state.members.forEach(m => { m.school = state.schoolMode; m.ban = ''; });
+  banCache.clear();
+  renderMembers(); state.members.forEach((m,i) => { if (m.id) checkBan(i); });
+});
+function renderScreen() {
+  if (el.screenBoard.classList.contains('hidden') || state.view !== 'admin' || !state.admin.data) return;
+  const data = state.admin.data.day;
+  el.screenDate.textContent = fmtDate(data.date) + (data.closed ? ' · 휴관' : '');
+  const active = data.reservations.filter(r => r.status === '예약');
+  const volley = active.some(r => r.place === VOLLEY);
+  const usedHalves = BASKET.filter(place => active.some(r => r.place === place));
+  const order = [...(volley ? [VOLLEY] : BIG_COURTS.filter(place => !(OVERLAPS[place] || []).some(p => usedHalves.includes(p))).concat(usedHalves)), '코트 5', REST];
+  el.screenCards.innerHTML = order.map(place => {
+    const reservations = active.filter(r => r.place === place);
+    const members = reservations.flatMap(r => r.members);
+    const blockers = active.filter(r => (OVERLAPS[place] || []).includes(r.place) || (BIG_PLACES.includes(place) && r.place === VOLLEY) || (place === VOLLEY && BIG_PLACES.includes(r.place)));
+    const title = place.startsWith('코트') ? `${place === '코트 5' ? '소체육관' : '배드민턴'} · ${place}` : place;
+    return `<section class="screen-card ${place === VOLLEY ? 'wide' : ''}"><h2>${esc(title)}</h2>${members.length ? '<div class="screen-members">' + members.map(m => `<p>${esc(schoolOf(m.school))} ${esc(m.id)} · ${esc(m.name)}</p>`).join('') + '</div>' : `<p>${data.closed ? '휴관' : blockers.length ? '다른 종목 사용 중' : '예약 없음'}</p>`}${blockers.length && !members.length ? `<small>${esc([...new Set(blockers.map(r => r.place))].join(' · '))}</small>` : ''}</section>`;
+  }).join('');
+  el.screenUpdated.textContent = `최근 갱신 ${new Date().toLocaleTimeString('ko-KR')}`;
+}
+async function closeScreen() {
+  el.screenBoard.classList.add('hidden'); el.screenCards.replaceChildren();
+  document.body.style.overflow = '';
+  if (document.fullscreenElement === el.screenBoard) await document.exitFullscreen().catch(() => {});
+}
+el.btnScreen.addEventListener('click', () => {
+  if (state.view !== 'admin') return;
+  el.screenBoard.classList.remove('hidden'); document.body.style.overflow = 'hidden';
+  renderScreen(); loadAdmin(true);
+  el.screenBoard.requestFullscreen?.().catch(() => {});
+});
+el.screenClose.addEventListener('click', closeScreen);
+el.screenFullscreen.addEventListener('click', () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else el.screenBoard.requestFullscreen?.().catch(() => {}); });
+document.addEventListener('keydown', event => { if (event.key === 'Escape') closeScreen(); });
 renderMode();
 renderLockButton();
 renderType();
@@ -2391,7 +2494,7 @@ autoStartIfGranted();
 setInterval(() => {
   if (!isConnected() || pendingRequests > 0 || document.hidden || !el.loading.classList.contains('hidden')) return;
   if (state.view === 'student') loadPublic();
-  else if (state.admin.tab === 'res') loadAdmin();
+  else if (state.admin.tab === 'res' || !el.screenBoard.classList.contains('hidden')) loadAdmin(true);
 }, 20000);
 </script>
 

@@ -24,13 +24,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
       - name: 문법 검사 (Code.gs · config.js · index.html 스크립트)
         run: |
           cp apps-script/Code.gs /tmp/Code.js && node --check /tmp/Code.js
           node --check public/config.js
-          node -e "const s=require('fs').readFileSync('public/index.html','utf8');const m=[...s.matchAll(/<script>([\s\S]*?)<\/script>/g)];require('fs').writeFileSync('/tmp/page.js',m[m.length-1][1]);"
+          node -e "const s=require('fs').readFileSync('public/index.html','utf8');const m=[...s.matchAll(/<script>([\s\S]*?)<\/script>/g)];m.forEach(x=>new(require('vm').Script)(x[1]));require('fs').writeFileSync('/tmp/page.js',m[m.length-1][1]);"
           node --check /tmp/page.js
+      - name: 예약 규칙과 화면 통합 검증
+        run: |
+          npm ci --ignore-scripts
+          npm test
       - name: 비밀번호가 코드에 들어갔는지 확인
         run: |
           if grep -nE "ADMIN_PASSWORD[\"' ]*[:=][[:space:]]*['\"][^'\"]+['\"]" apps-script/Code.gs public/*.js public/*.html; then
