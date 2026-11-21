@@ -7,6 +7,8 @@
 
 const CONFIG = {
   MAX_GROUP: 4,                    // 코트·휴식 단체 최대 인원
+  BASKET_MIN: 4,
+  BASKET_MAX: 8,
   COURT_MAX: 4,                    // 코트 하나당 최대 인원
   VOLLEY_MIN: 10,                  // 배구 최소 인원
   VOLLEY_MAX: 20,                  // 배구 최대 인원
@@ -161,6 +163,7 @@ function placeError_(place, type, n, occ, restCap) {
   if (BIG_PLACES.indexOf(place) >= 0 && occ[VOLLEY].people > 0) return '배구 예약이 먼저 들어와 대체육관 전체를 사용합니다.';
   const overlap = (OVERLAPS[place] || []).filter(function (c) { return occ[c].people > 0; });
   if (overlap.length) return overlap.join('·') + ' 예약과 구역이 겹쳐 예약할 수 없습니다.';
+  if (BASKET.indexOf(place) >= 0 && (type !== '단체' || n < CONFIG.BASKET_MIN || n > CONFIG.BASKET_MAX)) return '농구는 단체 4~8명으로 예약해야 합니다.';
   const o = occ[place];
   if (type === '단체') return o.people > 0 ? place + ' 자리에 이미 다른 학생이 예약되어 단체로 쓸 수 없습니다. 비어 있는 코트를 고르세요.' : '';
   if (o.group || o.people >= CONFIG.COURT_MAX) return place + ' 자리가 마감되었습니다.';
@@ -182,6 +185,8 @@ function validateMembers_(type, members, place) {
   if (place === VOLLEY) {
     if (type !== '단체') throw new Error('배구는 단체로만 예약할 수 있습니다.');
     if (list.length < CONFIG.VOLLEY_MIN || list.length > CONFIG.VOLLEY_MAX) throw new Error('배구는 ' + CONFIG.VOLLEY_MIN + '~' + CONFIG.VOLLEY_MAX + '명이어야 합니다.');
+  } else if (BASKET.indexOf(place) >= 0) {
+    if (type !== '단체' || list.length < CONFIG.BASKET_MIN || list.length > CONFIG.BASKET_MAX) throw new Error('농구는 단체 4~8명으로 예약해야 합니다.');
   } else {
     if (type === '개인' && list.length !== 1) throw new Error('개인 예약은 1명만 등록합니다.');
     if (type === '단체' && (list.length < 2 || list.length > CONFIG.MAX_GROUP)) throw new Error('단체 예약은 2~' + CONFIG.MAX_GROUP + '명입니다.');

@@ -25,6 +25,15 @@ w.eval(`state.pub.bookable=true;state.pub.occupancy=emptyOcc();state.pub.occupan
 assert.equal($('[data-place="농구 왼쪽 반코트"]').getAttribute('aria-disabled'),'true');
 assert.equal($('[data-place="농구 오른쪽 반코트"]').getAttribute('aria-disabled'),null);
 assert.match($('[data-place="배구"]').textContent,/10~20명/);
+$('[data-place="농구 오른쪽 반코트"]').click();
+assert.equal(w.eval('state.type'),'group'); assert.equal(w.eval('state.members.length'),4);
+assert.equal(w.eval('memberLimits().max'),8);
+for(let i=0;i<4;i++) $('#btnAddMember').click();
+assert.equal(w.eval('state.members.length'),8); assert.equal($('#btnAddMember').disabled,true);
+assert.match($('#typeNote').textContent,/4~8명/);
+assert.equal(w.eval('limitsFor({place:BASKET[0]}).min'),4);
+for(const n of [3,9]) assert.throws(()=>w.eval(`validateMembers('단체',Array.from({length:${n}},(_,i)=>({school:'중',id:String(31000+i),name:'농구'+i})),BASKET[0])`),/4~8명/);
+
 assert.match(w.document.body.textContent,/학기 말 일괄 삭제됩니다/);
 assert.match($('.site-footer').textContent,/Copyright © 2026 김민석/);
 for(let n=1;n<=3;n++){

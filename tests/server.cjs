@@ -155,7 +155,27 @@ assert.equal(login3.failures,3); assert.equal(login3.lockedUntil-login3.serverNo
 props.delete('ADMIN_LOGIN_STATE');
 // Full request route rejects a conflicting half before uploading a photo, across server instances.
 const uploadsBeforeHalf=uploads;
-const blockedHalf=b.route_({...request,place:'농구 왼쪽 반코트',members:[{school:'중',id:'30999',name:'충돌검증'}]});
+const blockedHalf=b.route_({...request,place:'농구 왼쪽 반코트',type:'단체',members:Array.from({length:4},(_,i)=>({school:'중',id:String(30990+i),name:'충돌검증'+i}))});
 assert.equal(blockedHalf.ok,false); assert.match(blockedHalf.error,/겹쳐/); assert.equal(uploads,uploadsBeforeHalf);
 assert.equal(b.route_({action:'public'}).courtLayouts,true);
 console.log('PASS both basketball halves conflict with both badminton courts, opposite half/small gym stay available, volleyball exclusion, safe error metadata and full-route collision rejection');
+
+// Basketball boundaries apply to both booking and member updates via the shared validator.
+for (const half of ['농구 왼쪽 반코트','농구 오른쪽 반코트']) {
+  for (const n of [3,4,8,9]) {
+    const members=Array.from({length:n},(_,i)=>({school:'중',id:String(31000+i),name:'농구'+i}));
+    a.basketTest={half,members};
+    if(n===4||n===8) assert.equal(vm.runInContext("validateMembers_('단체',basketTest.members,basketTest.half).length",a),n);
+    else assert.throws(()=>vm.runInContext("validateMembers_('단체',basketTest.members,basketTest.half)",a),/4~8명/);
+  }
+  assert.throws(()=>a.validateMembers_('개인',[{school:'중',id:'31000',name:'개인'}],half),/4~8명/);
+}
+const basketballTeam=Array.from({length:8},(_,i)=>({school:'중',id:String(32000+i),name:'농구팀'+i}));
+const basketball=a.route_({...request,place:'농구 오른쪽 반코트',type:'단체',members:basketballTeam});
+assert.equal(basketball.ok,true,basketball.error);
+assert.equal(basketball.reservation.members.length,8);
+const changes={action:'updateMembers',school:'중',studentId:'32000',name:'농구팀0',code:basketball.reservation.code,key:basketball.reservation.key};
+assert.equal(a.route_({...changes,members:basketballTeam.slice(0,3)}).ok,false);
+assert.equal(a.route_({...changes,members:basketballTeam.slice(0,4)}).ok,true);
+assert.equal(b.route_({...request,place:'코트 2',members:[{id:'32111',name:'배드민턴'}]}).ok,false);
+console.log('PASS basketball 3/4/8/9 boundaries, no individual booking, eight-person persisted booking and member edit minimum');

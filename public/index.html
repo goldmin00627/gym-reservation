@@ -504,6 +504,8 @@ const CONFIG = {
   GAS_URL: String((window.GYM_CONFIG && window.GYM_CONFIG.GAS_URL) || '').trim(),
 
   SCHOOL_NAME: (window.GYM_CONFIG && window.GYM_CONFIG.SCHOOL_NAME) || 'OO중학교',
+  BASKET_MIN: 4,
+  BASKET_MAX: 8,
   MAX_GROUP: 4,                 // 단체 최대 인원 (Code.gs와 같게)
   COURT_MAX: 4,                 // 코트 하나당 최대 인원 (Code.gs와 같게)
   DEFAULT_REST_CAPACITY: 30,    // 휴식 최대 인원 기본값 (관리자 페이지에서 변경)
@@ -788,6 +790,8 @@ function validateMembers(type, members, place) {
   if (place === VOLLEY) {
     if (type !== '단체') throw new Error('배구는 단체로만 예약할 수 있습니다.');
     if (list.length < CONFIG.VOLLEY_MIN || list.length > CONFIG.VOLLEY_MAX) throw new Error(`배구는 ${CONFIG.VOLLEY_MIN}~${CONFIG.VOLLEY_MAX}명이어야 합니다.`);
+  } else if (BASKET.includes(place)) {
+    if (type !== '단체' || list.length < CONFIG.BASKET_MIN || list.length > CONFIG.BASKET_MAX) throw new Error('농구는 단체 4~8명으로 예약해야 합니다.');
   } else {
     if (type === '개인' && list.length !== 1) throw new Error('개인 예약은 1명만 등록합니다.');
     if (type === '단체' && (list.length < 2 || list.length > CONFIG.MAX_GROUP)) throw new Error(`단체 예약은 2~${CONFIG.MAX_GROUP}명입니다.`);
@@ -824,6 +828,7 @@ function placeError(place, type, n, occ, restCap) {
   if (BIG_PLACES.includes(place) && occ[VOLLEY].people > 0) return '배구 예약이 먼저 들어와 대체육관 전체를 사용합니다.';
   const overlap = (OVERLAPS[place] || []).filter(c => occ[c]?.people > 0);
   if (overlap.length) return `${overlap.join('·')} 예약과 구역이 겹쳐 예약할 수 없습니다.`;
+  if (BASKET.includes(place) && (type !== '단체' || n < CONFIG.BASKET_MIN || n > CONFIG.BASKET_MAX)) return '농구는 단체 4~8명으로 예약해야 합니다.';
   const o = occ[place];
   if (type === '단체') return o.people > 0 ? `${place} 자리에 이미 다른 학생이 예약되어 단체로 쓸 수 없습니다. 비어 있는 코트를 고르세요.` : '';
   if (o.group || o.people >= CONFIG.COURT_MAX) return `${place} 자리가 마감되었습니다.`;
@@ -1119,10 +1124,11 @@ function renderNotices(notices) {
    체육관 배치도 (학생 선택용 / 관리자 현황용 공용)
    ============================================================ */
 function courtStatus(place, occ) {
-  const o = occ[place] || { people: 0, group: false }, max = CONFIG.COURT_MAX;
+  const o = occ[place] || { people: 0, group: false }, max = BASKET.includes(place) ? CONFIG.BASKET_MAX : CONFIG.COURT_MAX;
   const overlap = (OVERLAPS[place] || []).filter(c => occ[c]?.people > 0);
   if (overlap.length) return { closed: true, count: '사용 중', sub: overlap.join('·') + '와 겹침' };
   if (BIG_PLACES.includes(place) && occ[VOLLEY].people > 0) return { closed: true, count: '배구', sub: '배구 예약 사용' };
+  if (BASKET.includes(place) && o.people > 0) return { closed: true, count: `${o.people}/${max}`, sub: '농구 팀 사용 · 마감' };
   if (o.group) return { closed: true, count: `${o.people}/${max}`, sub: '단체 사용 · 마감' };
   if (o.people >= max) return { closed: true, count: `${o.people}/${max}`, sub: '마감' };
   if (o.people === 0) return { closed: false, count: `0/${max}`, sub: '비어 있음' };
@@ -1145,7 +1151,7 @@ function renderMap(occ, opts) {
   const pickedVolley = sel && opts.selected === VOLLEY;
   const tile = (place, tall) => {
     const st = courtStatus(place, occ);
-    const err = sel ? placeError(place, opts.type, opts.size, occ, opts.restCap) : '';
+    const err = sel ? placeError(place, BASKET.includes(place) ? '단체' : opts.type, BASKET.includes(place) ? Math.max(CONFIG.BASKET_MIN, Math.min(CONFIG.BASKET_MAX, opts.size)) : opts.size, occ, opts.restCap) : '';
     const isSel = sel && opts.selected === place;
     const asVolley = pickedVolley && BIG_PLACES.includes(place);
     const on = isSel || asVolley;
@@ -1156,7 +1162,7 @@ function renderMap(occ, opts) {
     return `<${tag} ${sel ? `type="button" data-place="${place}" aria-pressed="${isSel}" ${err && !asVolley ? 'aria-disabled="true"' : ''}` : ''} class="${sel ? 'press ' : ''}court-lines relative flex ${tall ? 'min-h-[140px] flex-1' : 'min-h-[104px]'} flex-col items-center justify-center gap-0.5 rounded-2xl p-3 text-center ${look}">
       <span class="relative text-[15px] font-bold">${place}</span>
       <span class="relative text-[26px] font-extrabold leading-tight tabular-nums ${on ? 'text-white' : st.closed ? 'text-mute' : 'text-brand'}">${asVolley ? '배구' : st.count}</span>
-      <span class="relative text-[12px] font-bold ${on ? 'text-white/90' : st.closed ? 'text-bad' : 'text-sub'}">${asVolley ? '배구로 사용' : st.sub}</span>
+      <span class="relative text-[12px] font-bold ${on ? 'text-white/90' : st.closed ? 'text-bad' : 'text-sub'}">${asVolley ? '배구로 사용' : BASKET.includes(place) && !st.closed ? '단체 4~8명 · 한 팀 전용' : st.sub}</span>
     </${tag}>`;
   };
   const side = (place, icon, iconCls, title, desc, st) => {
@@ -1314,7 +1320,7 @@ const typeKo = () => (state.type === 'group' ? '단체' : '개인');
 const blankMember = () => ({ school: state.schoolMode, id: '', name: '', ban: '' });
 function memberLimits(place = state.place) {
   if (state.type === 'single') return { min: 1, max: 1 };
-  return place === VOLLEY ? { min: CONFIG.VOLLEY_MIN, max: CONFIG.VOLLEY_MAX } : { min: 2, max: CONFIG.MAX_GROUP };
+  return place === VOLLEY ? { min: CONFIG.VOLLEY_MIN, max: CONFIG.VOLLEY_MAX } : BASKET.includes(place) ? { min: CONFIG.BASKET_MIN, max: CONFIG.BASKET_MAX } : { min: 2, max: CONFIG.MAX_GROUP };
 }
 // 구분·장소가 바뀌면 학생 칸 수를 규칙에 맞춤 (입력한 값은 앞에서부터 유지)
 function fitMembers() {
@@ -1325,10 +1331,12 @@ function fitMembers() {
 }
 
 function renderType() {
+  el.reserveForm.querySelector('[data-type=group]').textContent = state.place === VOLLEY ? '단체 · 10~20명' : BASKET.includes(state.place) ? '단체 · 4~8명' : '단체 · 2~4명';
   paintChoice(el.reserveForm.querySelectorAll('[data-type]'), (b) => b.dataset.type === state.type,
     'press h-12 rounded-[14px] text-[15px] font-bold', 'bg-card text-ink shadow-sm', 'text-mute');
   el.typeNote.innerHTML = infoIcon(18) + (state.place === VOLLEY
     ? `<span>배구는 대체육관 전체(코트 1~4)를 사용해요. ${CONFIG.VOLLEY_MIN}~${CONFIG.VOLLEY_MAX}명이 함께 예약해야 하고, 대체육관 코트에 먼저 들어온 예약이 하나라도 있으면 예약할 수 없어요.</span>`
+    : BASKET.includes(state.place) ? '<span>농구 반코트는 단체 4~8명이 한 팀으로 예약해요. 선택한 반코트는 우리 팀만 사용하며 겹치는 배드민턴 코트와 함께 예약할 수 없어요.</span>'
     : state.type === 'single'
       ? '<span>개인으로 예약하면 다른 학생과 코트를 함께 사용할 수 있어요. 코트 하나에 최대 4명까지 들어갑니다.</span>'
       : '<span>단체(2~4명)로 예약하면 그 코트를 우리 팀만 사용해요. 아무도 예약하지 않은 빈 코트만 고를 수 있어요. 배구(10명 이상)는 아래 배구 버튼을 누르세요.</span>');
@@ -1353,6 +1361,10 @@ el.placeMap.addEventListener('click', (e) => {
   if (state.place === place) { state.place = null; fitMembers(); renderType(); renderMembers(); return; }
   if (place === VOLLEY) {
     if (volleyStatus(occ).closed) { toast(placeError(VOLLEY, '단체', CONFIG.VOLLEY_MIN, occ, state.pub.restCapacity), 'error'); return; }
+    state.type = 'group';
+  } else if (BASKET.includes(place)) {
+    const err = placeError(place, '단체', CONFIG.BASKET_MIN, occ, state.pub.restCapacity);
+    if (err) { toast(err, 'error'); return; }
     state.type = 'group';
   } else {
     const n = state.type === 'single' ? 1 : Math.min(Math.max(state.members.length, 2), CONFIG.MAX_GROUP);
@@ -1457,7 +1469,7 @@ function updateReserve() {
 el.reserveForm.querySelectorAll('[data-type]').forEach((b) => b.addEventListener('click', () => {
   if (state.type === b.dataset.type) return;
   state.type = b.dataset.type;
-  if (state.type === 'single' && state.place === VOLLEY) state.place = null;
+  if (state.type === 'single' && (state.place === VOLLEY || BASKET.includes(state.place))) state.place = null;
   fitMembers();
   renderType(); renderMembers();
 }));
@@ -1689,7 +1701,7 @@ el.lookupForm.addEventListener('submit', async (e) => {
   }, (msg) => { lk.cred = null; lk.list = []; lookupMessage(msg, true); });
 });
 
-const limitsFor = (r) => (r.place === VOLLEY ? { min: CONFIG.VOLLEY_MIN, max: CONFIG.VOLLEY_MAX } : { min: 2, max: CONFIG.MAX_GROUP });
+const limitsFor = (r) => (r.place === VOLLEY ? { min: CONFIG.VOLLEY_MIN, max: CONFIG.VOLLEY_MAX } : BASKET.includes(r.place) ? { min: CONFIG.BASKET_MIN, max: CONFIG.BASKET_MAX } : { min: 2, max: CONFIG.MAX_GROUP });
 
 function renderLookup() {
   if (!lk.list.length) { lookupMessage('조회된 예약이 없습니다.'); return; }
