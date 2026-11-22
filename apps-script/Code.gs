@@ -105,9 +105,12 @@ function doPost(e) {
 
 function route_(p) {
   const lock = LockService.getScriptLock();
+  let lockHeld = false;
   try {
-    lock.waitLock(30000);
-    beginStore_();
+    // Public occupancy is advisory. Only writes require the serialized mutation lock;
+    // every reservation still revalidates capacity and overlaps under that lock.
+    const publicRead = p && p.action === 'public';
+    if (!publicRead) { lock.waitLock(30000); lockHeld = true; }
     const handlers = {
       public: handlePublic_, checkBan: handleCheckBan_, reserve: handleReserve_,
       lookup: handleLookup_, cancel: handleCancel_, updateMembers: handleUpdateMembers_,
@@ -116,14 +119,16 @@ function route_(p) {
     };
     const fn = handlers[p && p.action];
     if (!Object.prototype.hasOwnProperty.call(handlers, p && p.action)) throw new Error('알 수 없는 요청입니다.');
+    if (publicRead) storeRequest_ = { tables: {}, dirty: {}, revision: null };
+    else if (p.action !== 'login') beginStore_(); // Password checks do not need Firestore.
     const result = fn(p);
-    commitStore_();
+    if (storeRequest_) commitStore_();
     return result;
   } catch (err) {
     return { ok: false, error: errMsg_(err), code: err.code || '', failures: err.failures || 0, lockedUntil: err.lockedUntil || 0, serverNow: new Date().getTime() };
   } finally {
     storeRequest_ = null;
-    lock.releaseLock();
+    if (lockHeld) lock.releaseLock();
   }
 }
 

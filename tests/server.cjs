@@ -235,3 +235,16 @@ const christmas=a.route_({action:'public'}).days.find(d=>d.date==='2026-12-25');
 assert.equal(christmas.closed,true);assert.match(christmas.closedMemo,/성탄절/);
 assert.equal(a.route_({...request,date:'2026-12-25',members:groupAudit(1)}).ok,false);
 console.log('PASS extended audit: student/admin cancellation, cancellation history, ban cancellation/lift, closure/reopen, small gym independence, volleyball exclusivity, rest capacity, inspection validation, settings validation and Sunday 17:00 holiday boundaries');
+// Public reads must still work when a reservation owns the mutation lock.
+const busy=context(); let waits=0,releases=0;
+busy.LockService.getScriptLock=()=>({waitLock(){waits++;throw new Error('잠금 시간초과');},releaseLock(){releases++;}});
+const beforePublic=JSON.stringify(Array.from(documents));
+assert.equal(busy.route_({action:'public'}).ok,true);
+assert.equal(waits,0);assert.equal(releases,0);
+assert.equal(JSON.stringify(Array.from(documents)),beforePublic,'public cannot persist data');
+assert.equal(busy.route_(request).ok,false);assert.equal(waits,1);assert.equal(releases,0,'never release a lock that was not acquired');
+const authOnly=context();let fetches=0;
+authOnly.UrlFetchApp.fetch=()=>{fetches++;throw new Error('Firestore temporarily offline');};
+assert.equal(authOnly.route_({action:'login',password:'test-only-secret'}).ok,true);
+assert.equal(fetches,0,'login requires only script properties and its lock');
+console.log('PASS public reads bypass a held mutation lock without writes; reservations remain locked; login avoids Firestore; unacquired locks are not released');

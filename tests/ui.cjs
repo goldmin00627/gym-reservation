@@ -190,6 +190,27 @@ console.log('PASS board physical positions, left/right/both basketball merges, v
 w.eval('closeScreen()');assert.equal($('#screenCards').childElementCount,0);
 assert.equal($('#screenBoard').classList.contains('hidden'),true);
 assert.deepEqual(errors.map(e=>e.message),[]);
+// Failed initial loads are actionable, and duplicate refreshes share one request.
+w.eval("state.pub.days=null;publicLoadPromise=null;window.publicCalls=0;api=()=>{window.publicCalls++;return new Promise((resolve,reject)=>{window.resolvePublic=resolve;window.rejectPublic=reject})}");
+const pendingLoad=w.eval('loadPublic()');
+assert.equal(w.eval('loadPublic()'),pendingLoad);
+assert.equal(w.publicCalls,1);
+assert.equal($('#reserveSteps').disabled,true);
+w.rejectPublic(new Error('잠금 시간초과'));
+await pendingLoad;
+assert.match($('#publicLoadMessage').textContent,/잠금 시간초과/);
+assert.equal($('#btnRetryPublic').disabled,false);
+assert.equal($('#publicLoadStatus').classList.contains('hidden'),false);
+assert.doesNotMatch($('#placeMap').textContent,/불러오는 중/);
+$('#btnRetryPublic').click();
+assert.equal(w.publicCalls,2);
+w.resolvePublic({ok:true,today:'2026-11-22',days:[{date:'2026-11-23',closed:false,occupancy:w.eval('emptyOcc()')}],notices:[],restCapacity:30});
+await w.eval('publicLoadPromise');
+assert.equal($('#publicLoadStatus').classList.contains('hidden'),true);
+assert.equal($('#reserveSteps').disabled,false);
+assert.match($('#reserveTitle').textContent,/11월 23일/);
+console.log('PASS initial load failure, persistent error/retry, disabled stale form, duplicate request coalescing and successful retry');
+
 dom.window.close();reloaded.window.close();
 console.log('PASS DOM initialization, school toggle/defaults, court conflict UI, exact copy, three-attempt warning, countdown, persisted reload, expiry, screen privacy and escaped names');
 })().catch(e=>{console.error(e);process.exit(1)});
