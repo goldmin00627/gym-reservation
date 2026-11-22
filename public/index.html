@@ -107,10 +107,39 @@
 
 .special-overlay{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:16px;background:#080d16b8;backdrop-filter:blur(5px)}.special-overlay.hidden{display:none}.special-dialog{width:100%;max-width:560px;max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain;border:1px solid #59617170;border-radius:28px;background:#242830;color:#f8fafc;padding:24px;box-shadow:0 24px 80px #0008}.special-head{display:flex;justify-content:space-between;gap:12px}.special-head h2{font-size:25px;font-weight:900}.special-head p{color:#b3bac7;font-size:14px;margin-top:5px}.special-x{width:36px;height:36px;border-radius:12px;font-size:28px;line-height:1}.special-stage{margin:20px 0 12px;background:#454c59;border:1px solid #697180;border-radius:12px;padding:9px;text-align:center;letter-spacing:.2em;font-weight:800}.special-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.special-cards.volleyball{grid-template-columns:1fr}.special-card{position:relative;min-width:0;border:2px solid #747c88;border-radius:22px;background:#20242a;padding:22px 10px 16px;text-align:center;color:#f8fafc}.special-card.selected{border-color:#648aff;background:#23304b;box-shadow:0 0 0 1px #648aff}.special-card h3{font-size:clamp(16px,4vw,24px);font-weight:900}.special-card .zone{font-size:13px;color:#b7beca;margin-top:4px}.special-status{display:inline-block;border-radius:99px;padding:5px 12px;background:#355db7;color:#fff;font-size:13px;font-weight:800;margin-top:12px}.special-card.unavailable .special-status{color:#ff8a87;background:#632f32}.special-card.unavailable{color:#aeb5bf;background:#272a30}.special-court{display:block;height:auto;margin:18px auto 12px;width:70%;max-width:150px;color:#eef2ff}.volleyball .special-court{width:100%;max-width:430px}.unavailable .special-court{opacity:.4}.special-card-note{font-size:12px;font-weight:700;color:#aeb7c6;min-height:18px;overflow-wrap:anywhere}.selected .special-card-note{color:#86a4ff}.special-check{position:absolute;right:10px;top:10px;border-radius:50%;background:#648aff;color:white;width:23px;height:23px;display:grid;place-items:center;font-size:15px}.special-rule{border:1px solid #525b68;border-radius:14px;padding:12px;margin-top:12px;text-align:center;color:#d4d9e1;font-size:13px}.special-summary{border-top:1px solid #515967;margin-top:18px;padding-top:16px;display:flex;justify-content:space-between;gap:12px;font-size:14px;color:#b7bfcd}.special-summary strong{color:#89a6ff;text-align:right}.special-error{color:#ff8a87;font-size:13px;margin-top:10px;min-height:18px}.special-actions{display:grid;grid-template-columns:1fr 2fr;gap:12px;margin-top:14px}.special-actions button{padding:14px;border-radius:14px;background:#4b5360;color:#fff;font-weight:800}.special-actions .confirm{background:#527fff}.special-actions button:disabled{background:#424852;color:#8f98a5;cursor:not-allowed}.special-dialog button:focus-visible{outline:3px solid #91afff;outline-offset:3px}@media(max-width:360px){.special-dialog{padding:16px}.special-cards{gap:8px}.special-card{padding:24px 6px 12px}.special-status{padding:5px 8px}}
 
+
+/* Mobile first: ordinary phones first; wide screens enhance the same flow. */
+html,body{min-width:0;width:100%}button,input,textarea,select{touch-action:manipulation}input,textarea,select{min-width:0}img,video{max-width:100%}.venue-card{min-width:0}.venue-description{line-height:1.5}.venue-card>span:last-child{min-width:44px}.special-x{flex-shrink:0;min-width:44px;min-height:44px}.special-dialog{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px)}
+@media(max-width:639px){
+ .app-shell{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
+ #viewStudent>section,#reserveForm{padding:16px;border-radius:22px}
+ #reserveTitle{font-size:24px;line-height:1.35}
+ #memberRows .member-row{padding:12px}
+ #memberRows .member-row .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .field{padding-left:12px;padding-right:12px;font-size:16px}
+ #dateChips,#weekStrip{gap:4px}#dateChips button,#weekStrip button{padding-left:2px;padding-right:2px;min-height:60px}
+ .venue-card{padding:12px;gap:10px}.venue-card>span:first-child{width:36px;height:36px}
+ .venue-card>span:last-child>span:first-child{font-size:22px}
+ .student-school-toggle{gap:10px;min-height:48px}
+ #btnCamAlt,#btnCamRetry{min-height:44px}
+ #pwModal,#doneModal,#cancelModal,#photoModal{padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));overflow-y:auto}
+ #pwModal>div,#doneModal>div,#cancelModal>div,#photoModal>div{max-height:calc(100dvh - 32px);overflow-y:auto}
+ .special-overlay{padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
+ .special-dialog{padding:16px;border-radius:22px;max-height:calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}
+ .special-head h2{font-size:22px}.special-head p{font-size:13px}.special-stage{margin-top:12px}
+ .special-card{padding:18px 8px 12px;border-radius:16px}.special-cards{gap:10px}.special-card h3{font-size:18px}
+ .special-court{width:70%;max-width:120px;margin:12px auto}.special-status{margin-top:8px}
+ .special-summary{margin-top:12px;padding-top:12px}.special-actions{margin-top:8px;gap:8px}.special-actions button{min-height:48px}
+ .site-footer{margin:20px 0;padding:16px 12px;font-size:12px}
+ #viewAdmin [role=tablist] button{padding-left:2px;padding-right:2px;min-height:48px}
+}
+@media(max-width:359px){#viewStudent>section,#reserveForm{padding:12px}.special-card h3{font-size:16px}.special-card .zone{font-size:12px}.special-dialog{padding:12px}.venue-card{gap:8px;padding:10px}.venue-card>span:first-child{width:32px;height:32px}.field{padding-left:10px;padding-right:10px}}
+@media(min-width:640px) and (max-width:899px){.special-dialog{max-width:560px}.venue-list{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body class="font-sans antialiased">
-<div class="mx-auto max-w-3xl px-4 pb-16 sm:px-6">
+<div class="app-shell mx-auto max-w-3xl px-4 pb-16 sm:px-6">
 
   <!-- 헤더 -->
   <header class="flex items-center justify-between gap-3 pb-4 pt-6">
@@ -1152,9 +1181,8 @@ function basketballStatus(occ) {
   return { closed: !available.length, count: available.length ? '가능' : '불가', sub: available.length ? '구역 선택 가능' : '두 구역 모두 사용 중' };
 }
 function volleyStatus(occ) {
-  if (occ[VOLLEY].people > 0) return { closed: true, count: `${occ[VOLLEY].people}명`, sub: '예약됨 · 마감' };
-  if (BIG_PLACES.some((c) => occ[c].people > 0)) return { closed: true, count: '불가', sub: '코트 예약이 먼저 있음' };
-  return { closed: false, count: '가능', sub: '선착순 1팀' };
+  const unavailable = occ[VOLLEY].people > 0 || BIG_PLACES.some(c => occ[c].people > 0);
+  return { closed: unavailable, count: unavailable ? '불가' : '가능', sub: unavailable ? '(1/1)' : '(0/1)' };
 }
 
 // opts: { selectable, type, size, selected, restCap }
@@ -1190,15 +1218,15 @@ function renderMap(occ, opts) {
     const look = isSel ? 'border-transparent bg-brand text-white shadow-[0_0_0_3px_rgb(var(--brand)/.3)]'
       : st.closed ? 'closed border-line bg-card text-mute'
       : (blocked ? 'border-line bg-card opacity-60' : 'border-line bg-card ' + (sel ? 'hover:border-brand/50' : ''));
-    return `<${tag} ${interactive ? `type="button" ${specialKind ? `data-special-kind="${specialKind}" aria-haspopup="dialog" aria-controls="specialModal"` : `data-place="${place}" ${blocked ? 'aria-disabled="true"' : ''}`} aria-pressed="${isSel}"` : ''} class="${interactive ? 'press ' : ''}flex w-full items-center gap-3 rounded-2xl border-2 p-4 text-left ${look}">
+    return `<${tag} ${interactive ? `type="button" ${specialKind ? `data-special-kind="${specialKind}" aria-haspopup="dialog" aria-controls="specialModal"` : `data-place="${place}" ${blocked ? 'aria-disabled="true"' : ''}`} aria-pressed="${isSel}"` : ''} class="venue-card ${interactive ? 'press ' : ''}flex w-full items-center gap-3 rounded-2xl border-2 p-4 text-left ${look}">
       <span class="grid h-11 w-11 shrink-0 place-items-center rounded-full ${isSel ? 'bg-white/20' : iconCls}">${icon}</span>
       <span class="min-w-0 flex-1">
         <span class="block text-[16px] font-bold">${title}</span>
-        ${opts.compact ? '' : `<span class="block text-[12px] font-medium leading-snug ${isSel ? 'text-white/85' : 'text-sub'}">${desc}</span>`}
+        ${opts.compact ? '' : `<span class="venue-description block text-[12px] font-medium leading-snug ${isSel ? 'text-white/85' : 'text-sub'}">${desc}</span>`}
       </span>
       <span class="shrink-0 text-right">
         <span class="block text-[22px] font-extrabold leading-tight tabular-nums ${isSel ? 'text-white' : st.closed ? 'text-bad' : 'text-brand'}">${st.count}</span>
-        ${opts.compact ? '' : `<span class="block text-[11px] font-bold ${isSel ? 'text-white/85' : 'text-mute'}">${st.sub}</span>`}
+        ${opts.compact && place !== VOLLEY ? '' : `<span class="block text-[11px] font-bold ${isSel ? 'text-white/85' : 'text-mute'}">${st.sub}</span>`}
       </span>
     </${tag}>`;
   };
@@ -1217,10 +1245,10 @@ function renderMap(occ, opts) {
         <div class="flex flex-1 flex-col">${tile('코트 5', true)}</div>
       </div>
     </div>
-    <div class="mt-3 grid gap-3 lg:grid-cols-3">
+    <div class="venue-list mt-3 grid gap-3">
       ${side(REST, restIcon, 'bg-goodsoft text-good', '휴식', '코트 없이 체육관에서 쉬어요', restStatus(occ, opts.restCap))}
-      ${side('농구', ballIcon, 'bg-brandsoft text-brand', '농구', '단체 4~8명 · 눌러서 농구코트 선택', basketballStatus(occ))}
-      ${side(VOLLEY, ballIcon, 'bg-brandsoft text-brand', '배구', `단체 ${CONFIG.VOLLEY_MIN}~${CONFIG.VOLLEY_MAX}명 · 선착순 1팀 · 대체육관 전체 사용 · 일반 코트·농구 예약이 있으면 불가`, volleyStatus(occ))}
+      ${side('농구', ballIcon, 'bg-brandsoft text-brand', '농구', '단체 4~8명 ·<br>눌러서 농구코트 선택', basketballStatus(occ))}
+      ${side(VOLLEY, ballIcon, 'bg-brandsoft text-brand', '배구', `단체 ${CONFIG.VOLLEY_MIN}~${CONFIG.VOLLEY_MAX}명 ·<br>눌러서 배구코트 선택`, volleyStatus(occ))}
     </div>
     `;
 }
@@ -1519,7 +1547,7 @@ function memberRowHtml(m, i) {
         <span class="${schoolOf(m.school) === '고' ? 'text-brand' : 'text-sub'}">고등학교</span>
       </div>
       <div class="mt-1.5 grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-2">
-        <input data-f="id" type="text" inputmode="numeric" maxlength="5" placeholder="학번 (예: 30215)" aria-label="학생 ${i + 1} 학번" value="${esc(m.id)}" class="field !mt-0 !bg-card tracking-wide ${m.ban ? 'is-invalid' : ''}">
+        <input data-f="id" type="text" inputmode="numeric" maxlength="5" placeholder="학번 5자리" aria-label="학생 ${i + 1} 학번" value="${esc(m.id)}" class="field !mt-0 !bg-card tracking-wide ${m.ban ? 'is-invalid' : ''}">
         <input data-f="name" type="text" maxlength="20" placeholder="이름" aria-label="학생 ${i + 1} 이름" value="${esc(m.name)}" class="field !mt-0 !bg-card ${m.ban ? 'is-invalid' : ''}">
       </div>
       <p class="ban-msg ${m.ban ? 'flex' : 'hidden'} mt-2 items-start gap-1.5 text-[14px] font-bold leading-snug text-bad" role="alert">

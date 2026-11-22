@@ -32,6 +32,19 @@ $(schoolSwitch).click();
 assert.equal(w.eval('state.members[0].school'),'중');
 assert.equal(w.eval('state.members[1].school'),'고');
 assert.equal(w.document.activeElement,$(schoolSwitch),'keyboard focus survives rendering');
+// Volleyball's fraction describes whether its one shared area is available, including conflicts.
+for(const occupied of [null,'배구','코트 1','코트 2','코트 3','코트 4','농구 왼쪽 반코트','농구 오른쪽 반코트','코트 5']) {
+  w.eval(`state.pub.bookable=true;state.pub.occupancy=emptyOcc();${occupied ? `state.pub.occupancy[${JSON.stringify(occupied)}].people=1;` : ''}renderPlaces()`);
+  const blocked=occupied!==null && occupied!=='코트 5';
+  const card=$('#placeMap [data-special-kind="volleyball"]');
+  assert.match(card.textContent,blocked ? /불가\s*\(1\/1\)/ : /가능\s*\(0\/1\)/);
+  assert.doesNotMatch(card.textContent,/선착순|일반 코트|대체육관 전체/);
+  const desc=card.querySelector('.venue-description');
+  assert.equal(desc.querySelectorAll('br').length,1);
+  assert.equal(desc.innerHTML,'단체 10~20명 ·<br>눌러서 배구코트 선택');
+}
+assert.equal($('#placeMap [data-special-kind="basketball"] .venue-description').innerHTML,'단체 4~8명 ·<br>눌러서 농구코트 선택');
+
 // Special venues open a draft-only popup; availability is checked again before confirmation.
 w.eval(`state.pub.bookable=true;state.pub.date='2026-11-23';state.pub.occupancy=emptyOcc();state.pub.occupancy['코트 3'].people=1;renderPlaces();`);
 const basketballButton='#placeMap [data-special-kind="basketball"]';
