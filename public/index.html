@@ -185,7 +185,7 @@ html,body{min-width:0;width:100%}button,input,textarea,select{touch-action:manip
     <form id="reserveForm" class="mt-3 rounded-[28px] bg-card p-5 sm:p-7" novalidate autocomplete="off" aria-labelledby="reserveTitle">
       <p class="text-[14px] font-semibold text-sub">점심시간 예약</p>
       <h2 id="reserveTitle" class="mt-0.5 text-[26px] font-bold tracking-tight sm:text-[30px]">불러오는 중</h2>
-      <div id="publicLoadStatus" class="mt-3 hidden rounded-2xl bg-badsoft p-4 text-[14px] font-semibold text-bad" role="status"><p id="publicLoadMessage"></p><button id="btnRetryPublic" type="button" class="press mt-2 min-h-11 rounded-xl bg-brand px-4 py-2 text-white">다시 불러오기</button></div>
+      <div id="publicLoadStatus" class="mt-3 hidden rounded-2xl bg-badsoft p-4 text-[14px] font-semibold text-bad" role="status"><p id="publicLoadMessage"></p><button id="btnRetryPublic" type="button" class="hidden press mt-2 min-h-11 rounded-xl bg-brand px-4 py-2 text-white">다시 불러오기</button></div>
       <p id="openRule" class="mt-1 text-[13px] leading-relaxed text-mute"></p>
 
       <!-- 1. 날짜 -->
@@ -1401,13 +1401,14 @@ function loadPublic() {
 async function fetchPublic() {
   const initialLoad = !state.pub.days;
   el.btnRetryPublic.disabled = true;
+  el.btnRetryPublic.classList.add('hidden');
   if (initialLoad) {
     lockSteps(true); el.reserveTitle.textContent = '현황을 불러오는 중';
     el.publicLoadMessage.textContent = '서버에서 최신 예약 현황을 확인하고 있습니다.';
     el.publicLoadStatus.classList.remove('hidden');
   }
   const slowTimer = setTimeout(() => {
-    el.publicLoadMessage.textContent = '서버 응답이 지연되고 있습니다. 잠시 기다려 주세요. 응답이 없으면 다시 불러오기를 눌러 주세요.';
+    el.publicLoadMessage.textContent = '서버 응답이 지연되고 있습니다. 잠시 기다려 주세요.';
     el.publicLoadStatus.classList.remove('hidden');
   }, 8000);
   const cached = store.get('gym.public');
@@ -1427,6 +1428,7 @@ async function fetchPublic() {
     store.set('gym.public', { notices: state.pub.notices });
     renderNotices(state.pub.notices);
   } catch (err) {
+    el.btnRetryPublic.classList.remove('hidden');
     el.publicLoadMessage.textContent = '예약 현황을 불러오지 못했습니다. ' + err.message;
     el.publicLoadStatus.classList.remove('hidden');
     toast('예약 현황을 불러오지 못했습니다. ' + err.message, 'error');
