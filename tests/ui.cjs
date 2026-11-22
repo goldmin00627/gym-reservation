@@ -145,6 +145,48 @@ now+=599000; w.eval('paintLogin()');assert.equal($('#pwInput').disabled,false); 
 // Render active students only; arbitrary student text is escaped and photos never enter the screen DOM.
 w.eval(`state.view='admin';state.admin.date='2026-11-20';state.admin.data={day:{date:'2026-11-20',reservations:[{status:'예약',place:'코트 1',members:[{school:'고',id:'30101',name:'<img src=x onerror=alert(1)>'}],thumb:'data:image/jpeg;base64,secret'},{status:'취소',place:'코트 2',members:[{school:'중',id:'30202',name:'취소학생'}]}]}};el.screenBoard.classList.remove('hidden');renderScreen();`);
 assert.equal($('#screenBoard img'),null); assert.match($('#screenCards').textContent,/고 30101/);assert.doesNotMatch($('#screenCards').textContent,/취소학생/);assert.doesNotMatch($('#screenCards').innerHTML,/base64/);
+// Physical positions, merging, empty states and totals reflect only active member counts.
+const booking=(place,n,extra={})=>({place,status:'예약',type:n>1?'단체':'개인',members:Array.from({length:n},(_,i)=>({school:'중',id:String(31001+i),name:'가상학생'+i})),...extra});
+const board=(records,closed=null)=>{
+ w.eval(`state.admin.data={restCapacity:30,day:{date:'2026-11-23',closed:${JSON.stringify(closed)},reservations:${JSON.stringify(records)}}};renderScreen()`);
+};
+board([]);
+assert.equal($('#screenCards').querySelectorAll('[data-screen-place]').length,5);
+assert.equal($('#screenCards').querySelectorAll('.board-empty').length,5);
+assert.equal($('#screenTotal strong').textContent,'0명');
+assert.doesNotMatch($('#screenCards').textContent,/예약 가능/);
+assert.equal($('#screenBoard .screen-note'),null);
+assert.doesNotMatch($('#screenBoard').textContent,/사진 없는 현황판|20초마다 갱신|관리자 자동 잠금 시 종료/);
+assert.equal($('[data-screen-place="코트 1"]').classList.contains('board-position-1'),true);
+assert.equal($('[data-screen-place="코트 4"]').classList.contains('board-position-4'),true);
+board([booking('농구 왼쪽 반코트',6),booking('코트 4',1),booking('휴식',8),booking('코트 2',4,{status:'취소'})]);
+assert.equal($('#screenTotal strong').textContent,'15명');
+assert.match($('#screenTotal small').textContent,/코트 7명 · 휴식 8명/);
+assert.equal($('[data-screen-place="코트 1"]'),null);assert.equal($('[data-screen-place="코트 3"]'),null);
+assert.ok($('[data-screen-place="코트 2"]'));assert.ok($('[data-screen-place="코트 4"]'));
+assert.equal($('.board-half-left .screen-members').children.length,6);
+assert.equal($('.board-half-left .board-count').textContent,'6/8');
+assert.equal($('.board-rest .screen-members').children.length,8);
+board([booking('농구 오른쪽 반코트',4)]);
+assert.ok($('.board-half-right'));assert.equal($('[data-screen-place="코트 2"]'),null);assert.equal($('[data-screen-place="코트 4"]'),null);
+assert.ok($('[data-screen-place="코트 1"]'));assert.ok($('[data-screen-place="코트 3"]'));
+board([booking('농구 왼쪽 반코트',8),booking('농구 오른쪽 반코트',4),booking('코트 5',2)]);
+assert.equal($('#screenTotal strong').textContent,'14명');
+assert.equal($('#screenCards').querySelectorAll('[data-screen-place]').length,3);
+assert.equal($('#screenCards').querySelectorAll('.board-basketball').length,2);
+for(const n of [10,12,20]){
+ board([booking('배구',n),booking('휴식',8),booking('코트 5',2)]);
+ assert.equal($('#screenTotal strong').textContent,String(n+10)+'명');
+ assert.equal($('#screenCards').querySelectorAll('[data-screen-place]').length,2);
+ assert.equal($('.board-volleyball .screen-members').children.length,n);
+ assert.equal($('.board-volleyball .board-count').textContent,n+'/20');
+ assert.match($('.board-volleyball').textContent,/대체육관 전체 사용/);
+ assert.equal($('.board-basketball'),null);
+ assert.equal($('[data-screen-place="코트 5"] .board-count').textContent,'2/4');
+}
+board([],'시설 점검');assert.match($('.board-empty').textContent,/휴관/);
+console.log('PASS board physical positions, left/right/both basketball merges, volleyball 10/12/20, independent small gym, empty/closed states, active-only totals and removed note');
+
 w.eval('closeScreen()');assert.equal($('#screenCards').childElementCount,0);
 assert.equal($('#screenBoard').classList.contains('hidden'),true);
 assert.deepEqual(errors.map(e=>e.message),[]);
