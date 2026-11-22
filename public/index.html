@@ -153,6 +153,12 @@ html,body{min-width:0;width:100%}button,input,textarea,select{touch-action:manip
 @media(max-width:900px){.board-layout{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}.board-gym{padding:10px;border-radius:20px}.screen-board .board-court{padding:14px 10px}.board-basketball .screen-members,.board-volleyball .screen-members{grid-template-columns:1fr 1fr}.board-controls{margin-left:auto}.board-bottom{flex-wrap:wrap}}
 @media(max-width:600px){.board-layout{grid-template-columns:1fr;min-height:0}.board-big-courts{min-height:460px}.board-small>.board-court{min-height:200px}.board-header>div:first-child{min-width:0;flex-basis:100%}.board-header h1{font-size:24px}.board-total small{font-size:14px}.board-total strong{font-size:36px}.board-total{gap:8px}.board-gym>h2{font-size:22px}.board-court .screen-members p{font-size:16px}.board-basketball .screen-members{grid-template-columns:1fr}.board-volleyball .screen-members{grid-template-columns:1fr 1fr}.board-bottom{gap:10px;padding:12px;font-size:18px}.board-bottom>p{flex-shrink:1}.board-rest{flex-basis:100%}}
 
+
+/* Only the projector receives photographic backgrounds. Cards remain legible. */
+.screen-board{isolation:isolate;background:#071326}.board-backgrounds{position:fixed;inset:0;z-index:-2;pointer-events:none;background:#071326}.board-background{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.5s ease}.board-background.visible{opacity:1}.board-backgrounds:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,#04102499,#06142c66 50%,#04102499)}
+.board-gym{background:rgba(16,35,61,.92);border:1px solid #486a9c;border-radius:28px;box-shadow:0 10px 40px #0003}.screen-board .board-court{background:rgba(7,22,42,.94);border-color:#47618a}.screen-board .board-special{background:rgba(16,42,79,.96);border-color:#648aff}.board-bottom{background:rgba(8,26,50,.94);border-color:#47618a}.board-header{padding:12px;background:#07172bbd;border-radius:16px}.screen-board.is-closing>.board-header,.screen-board.is-closing>.screen-cards{display:none}.board-closing[hidden]{display:none}.board-closing{position:fixed;inset:0;background:#071326;z-index:100;display:grid;place-items:center}.board-closing>img{width:100%;height:100%;object-fit:contain}.board-closing>button{position:absolute;bottom:max(20px,env(safe-area-inset-bottom));background:#245cca;color:#fff;min-height:48px;padding:12px 20px;border-radius:14px}.board-closing>button[hidden]{display:none}.board-closing .board-closing-exit{top:12px;right:12px;bottom:auto;opacity:0}.board-closing:hover .board-closing-exit,.board-closing-exit:focus-visible{opacity:1}
+@media(prefers-reduced-motion:reduce){.board-background{transition:none}}
+
 </style>
 </head>
 <body class="font-sans antialiased">
@@ -548,6 +554,7 @@ html,body{min-width:0;width:100%}button,input,textarea,select{touch-action:manip
 
 <!-- 학교 이름·서버 주소: config.js 한 파일만 고치면 됩니다 (Apps Script 안에서 쓸 때는 없어도 됨) -->
 <script src="config.js?v=firestore-1"></script>
+<script src="board-media.js?v=1"></script>
 <script>
 /* ============================================================
    설정 — 배포 전에 이 부분만 바꾸면 됩니다
@@ -2108,6 +2115,7 @@ function exitAdmin(msg) {
 function bumpIdle() {
   if (state.view !== 'admin') return;
   clearTimeout(state.admin.idleTimer);
+  if (boardMedia?.isActive()) return; // Dedicated projector mode stays open until explicitly closed.
   state.admin.idleTimer = setTimeout(() => exitAdmin('오래 사용하지 않아 관리자 화면을 잠갔습니다.'), CONFIG.ADMIN_IDLE_MINUTES * 60 * 1000);
 }
 ['pointerdown', 'keydown'].forEach((ev) => document.addEventListener(ev, bumpIdle, { passive: true }));
@@ -2701,14 +2709,21 @@ function renderScreen() {
   el.screenUpdated.textContent = `최근 갱신 ${new Date().toLocaleTimeString('ko-KR')}`;
 }
 
+const boardMedia = window.GymBoardMedia?.create(el.screenBoard, {
+  isOpenDay: date => !isWeekend(date) && !PUBLIC_HOLIDAYS[date] && !(dayInfo(date)?.closed),
+  onClose: () => closeScreen(), onFinish: () => closeScreen()
+});
 async function closeScreen() {
+  boardMedia?.stop();
   el.screenBoard.classList.add('hidden'); el.screenCards.replaceChildren();
+  if (state.view === 'admin') bumpIdle();
   document.body.style.overflow = '';
   if (document.fullscreenElement === el.screenBoard) await document.exitFullscreen().catch(() => {});
 }
 el.btnScreen.addEventListener('click', () => {
   if (state.view !== 'admin') return;
   el.screenBoard.classList.remove('hidden'); document.body.style.overflow = 'hidden';
+  boardMedia?.start(); bumpIdle();
   renderScreen(); loadAdmin(true);
   el.screenBoard.requestFullscreen?.().catch(() => {});
 });

@@ -6,6 +6,7 @@ const errors=[]; const vc=new VirtualConsole(); vc.on('jsdomError',error=>errors
 let now=Date.now();
 function page(storage={}) {
   return new JSDOM(html,{url:'https://gym.test/',runScripts:'dangerously',virtualConsole:vc,beforeParse(w){
+    w.eval(fs.readFileSync(path.join(__dirname,'../public/board-media.js'),'utf8'));
     w.tailwind={}; w.scrollTo=()=>{}; w.Date.now=()=>now;
     Object.entries(storage).forEach(([k,v])=>w.localStorage.setItem(k,v));
     w.setTimeout=(fn)=>0; w.clearTimeout=()=>{}; w.setInterval=()=>0;
@@ -144,7 +145,7 @@ assert.equal(reloaded.window.document.querySelector('#pwInput').disabled,true);
 now+=599000; w.eval('paintLogin()');assert.equal($('#pwInput').disabled,false); assert.equal($('#pwTimer').textContent,'');
 // Render active students only; arbitrary student text is escaped and photos never enter the screen DOM.
 w.eval(`state.view='admin';state.admin.date='2026-11-20';state.admin.data={day:{date:'2026-11-20',reservations:[{status:'예약',place:'코트 1',members:[{school:'고',id:'30101',name:'<img src=x onerror=alert(1)>'}],thumb:'data:image/jpeg;base64,secret'},{status:'취소',place:'코트 2',members:[{school:'중',id:'30202',name:'취소학생'}]}]}};el.screenBoard.classList.remove('hidden');renderScreen();`);
-assert.equal($('#screenBoard img'),null); assert.match($('#screenCards').textContent,/고 30101/);assert.doesNotMatch($('#screenCards').textContent,/취소학생/);assert.doesNotMatch($('#screenCards').innerHTML,/base64/);
+assert.equal($('#screenCards img'),null);assert.equal($('#screenBoard .board-closing img').getAttribute('src'),'board-media/closing.webp'); assert.match($('#screenCards').textContent,/고 30101/);assert.doesNotMatch($('#screenCards').textContent,/취소학생/);assert.doesNotMatch($('#screenCards').innerHTML,/base64/);
 // Physical positions, merging, empty states and totals reflect only active member counts.
 const booking=(place,n,extra={})=>({place,status:'예약',type:n>1?'단체':'개인',members:Array.from({length:n},(_,i)=>({school:'중',id:String(31001+i),name:'가상학생'+i})),...extra});
 const board=(records,closed=null)=>{
